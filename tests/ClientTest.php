@@ -4,17 +4,17 @@ namespace Volantus\Pigpio\Tests;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Volantus\Pigpio\Network\Socket;
-use Volantus\Pigpio\Pigpio;
+use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\Protocol\ResponseStructure;
 
 /**
- * Class PigpioTest
+ * Class ClientTest
  *
  * @package Volantus\Pigpio\Tests
  */
-class PigpioTest extends TestCase
+class ClientTest extends TestCase
 {
     /**
      * @var Socket|MockObject
@@ -22,14 +22,14 @@ class PigpioTest extends TestCase
     private $socket;
 
     /**
-     * @var Pigpio
+     * @var Client
      */
     private $service;
 
     protected function setUp()
     {
         $this->socket = $this->getMockBuilder(Socket::class)->disableOriginalConstructor()->getMock();
-        $this->service = new Pigpio($this->socket);
+        $this->service = new Client($this->socket);
     }
 
     public function test_sendRaw_correct()

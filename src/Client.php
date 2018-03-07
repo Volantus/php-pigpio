@@ -6,11 +6,11 @@ use Volantus\Pigpio\Protocol\Request;
 use Volantus\Pigpio\Protocol\Response;
 
 /**
- * Class Pigpio
+ * Class Client
  *
  * @package Volantus\Pigpio
  */
-class Pigpio
+class Client
 {
     /**
      * @var Socket
