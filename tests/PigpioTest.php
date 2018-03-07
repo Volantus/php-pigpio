@@ -5,6 +5,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Volantus\Pigpio\Network\Socket;
 use Volantus\Pigpio\Pigpio;
+use Volantus\Pigpio\Protocol\DefaultRequest;
+use Volantus\Pigpio\Protocol\Response;
+use Volantus\Pigpio\Protocol\ResponseStructure;
 
 /**
  * Class PigpioTest
@@ -29,32 +32,28 @@ class PigpioTest extends TestCase
         $this->service = new Pigpio($this->socket);
     }
 
-    public function test_sendRaw_correctEncoding()
+    public function test_sendRaw_correct()
     {
+        $expectedResponse = new Response(0, null);
+
+        $responseStructure = $this->getMockBuilder(ResponseStructure::class)->getMock();
+        $responseStructure->expects(self::once())
+            ->method('decode')
+            ->with(self::equalTo('correct response data'))
+            ->willReturn($expectedResponse);
+
+        $request = new DefaultRequest(8, 21, 1500, $responseStructure);
+
         $this->socket->expects(self::once())
             ->method('send')
-            ->with(self::equalTo(hex2bin('0800000015000000dc05000000000000')));
+            ->with(self::equalTo($request->encode()));
 
-        $this->service->sendRaw(8, 21, 1500, 0);
-    }
-
-    public function test_readRaw_signed_decodedCorrectly()
-    {
         $this->socket->expects(self::once())
             ->method('listen')
-            ->willReturn(pack('l', -1024));
+            ->willReturn('correct response data');
 
-        $result = $this->service->readRaw(true);
-        self::assertEquals([1 => -1024], $result);
-    }
+        $result = $this->service->sendRaw($request);
 
-    public function test_readRaw_unsigned_decodedCorrectly()
-    {
-        $this->socket->expects(self::once())
-            ->method('listen')
-            ->willReturn(pack('L', 1024));
-
-        $result = $this->service->readRaw(false);
-        self::assertEquals([1 => 1024], $result);
+        self::assertSame($result, $expectedResponse);
     }
 }
