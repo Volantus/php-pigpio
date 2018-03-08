@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Notification\Notifier;
+use Volantus\Pigpio\Notification\OpeningFailedException;
 use Volantus\Pigpio\Protocol\Bitmap;
 use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
@@ -53,20 +54,11 @@ class NotifierTest extends TestCase
      */
     public function test_open_alreadyOpen()
     {
+        $this->createPipe(1);
+
         $this->client->method('sendRaw')->willReturn(new Response(1));
         $this->notifier->open();
         $this->notifier->open();
-    }
-
-    public function test_open_correctRequest()
-    {
-        $this->client->expects(self::once())
-            ->method('sendRaw')
-            ->with(self::equalTo(new DefaultRequest(Commands::NO, 0, 0)))
-            ->willReturn(new Response(1));
-
-        $this->notifier->open();
-        self::assertTrue($this->notifier->isOpen());
     }
 
     /**
@@ -85,6 +77,30 @@ class NotifierTest extends TestCase
     }
 
     /**
+     * @expectedException \Volantus\Pigpio\Notification\OpeningFailedException
+     */
+    public function test_open_openingPipeFailed()
+    {
+        $this->expectExceptionMessage('Failed to open file handle to pipe ' . $this->tmpDirectory . '/pigpio15');
+
+        $this->client->method('sendRaw')->willReturn(new Response(15));
+        $this->notifier->open();
+    }
+
+    public function test_open_correctRequest()
+    {
+        $this->createPipe(1);
+
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::NO, 0, 0)))
+            ->willReturn(new Response(1));
+
+        $this->notifier->open();
+        self::assertTrue($this->notifier->isOpen());
+    }
+
+    /**
      * @expectedException \Volantus\Pigpio\Notification\HandleMissingException
      * @expectedExceptionMessage Notifier needs to be opened first
      */
@@ -99,6 +115,8 @@ class NotifierTest extends TestCase
      */
     public function test_start_alreadyStarted()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -119,6 +137,8 @@ class NotifierTest extends TestCase
      */
     public function test_start_failure()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -131,8 +151,26 @@ class NotifierTest extends TestCase
         $this->notifier->start(new Bitmap([20]), function () {});
     }
 
+    /**
+     * @expectedException \Volantus\Pigpio\Notification\BrokenPipeException
+     * @expectedExceptionMessage File handle to pipe is invalid
+     */
+    public function test_start_brokenPipe()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(41));
+
+        try {
+            $this->notifier->open();
+        } catch (OpeningFailedException $e) {}
+        $this->notifier->start(new Bitmap([20]), function () {});
+    }
+
     public function test_start_correctRequest()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -151,6 +189,8 @@ class NotifierTest extends TestCase
 
     public function test_start_restartPaused()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -193,6 +233,8 @@ class NotifierTest extends TestCase
      */
     public function test_pause_alreadyPaused()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -217,6 +259,8 @@ class NotifierTest extends TestCase
      */
     public function test_pause_failed()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -236,6 +280,8 @@ class NotifierTest extends TestCase
 
     public function test_pause_correctRequest()
     {
+        $this->createPipe(41);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(41));
@@ -272,6 +318,8 @@ class NotifierTest extends TestCase
      */
     public function test_cancel_failed()
     {
+        $this->createPipe(36);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(36));
@@ -286,6 +334,8 @@ class NotifierTest extends TestCase
 
     public function test_cancel_correctRequest()
     {
+        $this->createPipe(36);
+
         $this->client->expects(self::at(0))
             ->method('sendRaw')
             ->willReturn(new Response(36));
@@ -301,6 +351,20 @@ class NotifierTest extends TestCase
         self::assertFalse($this->notifier->isOpen());
         self::assertFalse($this->notifier->isStarted());
         self::assertFalse($this->notifier->isPaused());
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\Notification\NotStartedException
+     * @expectedExceptionMessage Notifier needs to be started first
+     */
+    public function test_tick_notStarted()
+    {
+        $this->notifier->tick();
+    }
+
+    private function createPipe(int $handle)
+    {
+        $this->fileSystem->touch($this->tmpDirectory . '/pigpio' . $handle);
     }
 
     protected function tearDown()

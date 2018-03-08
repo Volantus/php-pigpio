@@ -39,6 +39,11 @@ class Notifier
     private $paused = false;
 
     /**
+     * @var resource
+     */
+    private $pipeHandle;
+
+    /**
      * Notifier constructor.
      *
      * @param Client $client
@@ -76,6 +81,13 @@ class Notifier
         }
 
         $this->handle = $response->getResponse();
+
+        $pipeHandle = @fopen($this->pipeBase . $this->handle, 'r');
+        if ($pipeHandle === false) {
+            throw new OpeningFailedException('Failed to open file handle to pipe ' . $this->pipeBase . $this->handle);
+        }
+
+        $this->pipeHandle = $pipeHandle;
     }
 
     /**
@@ -92,6 +104,10 @@ class Notifier
 
         if ($this->callback !== null && !$this->paused) {
             throw new AlreadyStartedException('Notification has been already started');
+        }
+
+        if (!is_resource($this->pipeHandle)) {
+            throw new BrokenPipeException('File handle to pipe is invalid');
         }
 
         $request = new DefaultRequest(Commands::NB, $this->handle, $gpioPins->encode());
@@ -147,6 +163,8 @@ class Notifier
         $this->paused = false;
         $this->callback = null;
         $this->handle = null;
+        fclose($this->pipeHandle);
+        $this->pipeHandle = null;
     }
 
     /**
@@ -154,7 +172,9 @@ class Notifier
      */
     public function tick()
     {
-        // ToDo Implement pipe structure
+        if ($this->callback === null) {
+            throw new NotStartedException('Notifier needs to be started first');
+        }
     }
 
     /**
