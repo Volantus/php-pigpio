@@ -48,10 +48,6 @@ class NotifierTest extends TestCase
         $this->notifier = new Notifier($this->client, $this->tmpDirectory . '/pigpio');
     }
 
-    /**
-     * @expectedException \Volantus\Pigpio\Notification\AlreadyOpenException
-     * @expectedExceptionMessage Already fetched a handle, unable to open twice
-     */
     public function test_open_alreadyOpen()
     {
         $this->createPipe(1);
@@ -59,6 +55,8 @@ class NotifierTest extends TestCase
         $this->client->method('sendRaw')->willReturn(new Response(1));
         $this->notifier->open();
         $this->notifier->open();
+
+        self::assertTrue($this->notifier->isOpen());
     }
 
     /**
@@ -109,10 +107,6 @@ class NotifierTest extends TestCase
         $this->notifier->start(new Bitmap([20]), function () {});
     }
 
-    /**
-     * @expectedException \Volantus\Pigpio\Notification\AlreadyStartedException
-     * @expectedExceptionMessage Notification has been already started
-     */
     public function test_start_alreadyStarted()
     {
         $this->createPipe(41);
@@ -128,6 +122,8 @@ class NotifierTest extends TestCase
         $this->notifier->open();
         $this->notifier->start(new Bitmap([20]), function () {});
         $this->notifier->start(new Bitmap([8]), function () {});
+
+        self::assertTrue($this->notifier->isStarted());
     }
 
     /**
@@ -218,19 +214,15 @@ class NotifierTest extends TestCase
         self::assertFalse($this->notifier->isPaused());
     }
 
-    /**
-     * @expectedException \Volantus\Pigpio\Notification\NotStartedException
-     * @expectedExceptionMessage Notifier needs to be started first
-     */
     public function test_pause_notStarted()
     {
         $this->notifier->pause();
+
+        self::assertFalse($this->notifier->isStarted());
+        self::assertFalse($this->notifier->isStarted());
+        self::assertFalse($this->notifier->isPaused());
     }
 
-    /**
-     * @expectedException \Volantus\Pigpio\Notification\AlreadyPausedException
-     * @expectedExceptionMessage Unable to pause an already paused notification
-     */
     public function test_pause_alreadyPaused()
     {
         $this->createPipe(41);
@@ -251,6 +243,10 @@ class NotifierTest extends TestCase
         $this->notifier->start(new Bitmap([20]), function () {});
         $this->notifier->pause();
         $this->notifier->pause();
+
+        self::assertFalse($this->notifier->isStarted());
+        self::assertTrue($this->notifier->isPaused());
+        self::assertTrue($this->notifier->isOpen());
     }
 
     /**
@@ -302,13 +298,13 @@ class NotifierTest extends TestCase
         self::assertTrue($this->notifier->isPaused());
     }
 
-    /**
-     * @expectedException \Volantus\Pigpio\Notification\HandleMissingException
-     * @expectedExceptionMessage Notifier needs to be opened first
-     */
     public function test_cancel_notOpened()
     {
         $this->notifier->cancel();
+
+        self::assertFalse($this->notifier->isOpen());
+        self::assertFalse($this->notifier->isStarted());
+        self::assertFalse($this->notifier->isPaused());
     }
 
     /**

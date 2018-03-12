@@ -69,8 +69,9 @@ class Notifier
      */
     public function open()
     {
+        // Already open?
         if ($this->handle !== null) {
-            throw new AlreadyOpenException('Already fetched a handle, unable to open twice');
+            return;
         }
 
         $request = new DefaultRequest(Commands::NO, 0, 0);
@@ -102,8 +103,9 @@ class Notifier
             throw new HandleMissingException('Notifier needs to be opened first');
         }
 
+        // Already started?
         if ($this->callback !== null && !$this->paused) {
-            throw new AlreadyStartedException('Notification has been already started');
+            return;
         }
 
         if (!is_resource($this->pipeHandle)) {
@@ -126,12 +128,9 @@ class Notifier
      */
     public function pause()
     {
-        if ($this->callback === null) {
-            throw new NotStartedException('Notifier needs to be started first');
-        }
-
-        if ($this->paused) {
-            throw new AlreadyPausedException('Unable to pause an already paused notification');
+        // Already paused or not even started?
+        if ($this->callback === null || $this->paused) {
+            return;
         }
 
         $request = new DefaultRequest(Commands::NP, $this->handle, 0);
@@ -149,8 +148,9 @@ class Notifier
      */
     public function cancel()
     {
+        // Is notifier even open?
         if ($this->handle === null) {
-            throw new HandleMissingException('Notifier needs to be opened first');
+            return;
         }
 
         $request = new DefaultRequest(Commands::NC, $this->handle, 0);
