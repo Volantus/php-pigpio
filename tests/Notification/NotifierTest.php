@@ -5,6 +5,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
 use Volantus\Pigpio\Client;
+use Volantus\Pigpio\Notification\Event\AliveEvent;
+use Volantus\Pigpio\Notification\Event\EventFactory;
+use Volantus\Pigpio\Notification\Event\GpioEvent;
 use Volantus\Pigpio\Notification\Notifier;
 use Volantus\Pigpio\Notification\OpeningFailedException;
 use Volantus\Pigpio\Protocol\Bitmap;
@@ -35,6 +38,11 @@ class NotifierTest extends TestCase
     private $tmpDirectory;
 
     /**
+     * @var EventFactory|MockObject
+     */
+    private $factory;
+
+    /**
      * @var Notifier
      */
     private $notifier;
@@ -45,7 +53,8 @@ class NotifierTest extends TestCase
         $this->fileSystem = new Filesystem();
         $this->fileSystem->mkdir($this->tmpDirectory);
         $this->client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
-        $this->notifier = new Notifier($this->client, $this->tmpDirectory . '/pigpio');
+        $this->factory = $this->getMockBuilder(EventFactory::class)->getMock();
+        $this->notifier = new Notifier($this->client, $this->tmpDirectory . '/pigpio', $this->factory);
     }
 
     public function test_open_alreadyOpen()
@@ -357,6 +366,69 @@ class NotifierTest extends TestCase
     {
         $this->notifier->tick();
     }
+
+    public function test_tick_callbackCalled()
+    {
+        $this->createPipe(41);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(41));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::NB, 41, 1048576)))
+            ->willReturn(new Response(0));
+
+        file_put_contents($this->tmpDirectory . '/pigpio41', pack('LLSS', 1, 2, 3, 4));
+
+        $expected = new AliveEvent(4, 49461, []);
+        $this->factory->expects(self::once())
+            ->method('decode')
+            ->with(self::equalTo(pack('LLSS', 1, 2, 3, 4)))
+            ->willReturn($expected);
+
+        $this->notifier->open();
+        $this->notifier->start(new Bitmap([20]), function (GpioEvent $event) use (&$result) {
+            $result = $event;
+        });
+        $this->notifier->tick();
+
+        self::assertEquals($expected, $result);
+    }
+
+    public function test_tick_multipleBlocksInPipe()
+    {
+        $this->createPipe(41);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(41));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::NB, 41, 1048576)))
+            ->willReturn(new Response(0));
+
+        file_put_contents($this->tmpDirectory . '/pigpio41', pack('LLSS', 1, 2, 3, 4));
+        file_put_contents($this->tmpDirectory . '/pigpio41', pack('LLSS', 4, 5, 6, 7), FILE_APPEND);
+
+        $expected = new AliveEvent(4, 49461, []);
+        $this->factory->expects(self::at(0))
+            ->method('decode')
+            ->with(self::equalTo(pack('LLSS', 1, 2, 3, 4)))
+            ->willReturn($expected);
+
+        $this->factory->expects(self::at(1))
+            ->method('decode')
+            ->with(self::equalTo(pack('LLSS', 4, 5, 6, 7)))
+            ->willReturn($expected);
+
+        $this->notifier->open();
+        $this->notifier->start(new Bitmap([20]), function (GpioEvent $event) {});
+        $this->notifier->tick();
+    }
+
 
     private function createPipe(int $handle)
     {

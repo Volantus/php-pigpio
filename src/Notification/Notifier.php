@@ -2,6 +2,7 @@
 namespace Volantus\Pigpio\Notification;
 
 use Volantus\Pigpio\Client;
+use Volantus\Pigpio\Notification\Event\EventFactory;
 use Volantus\Pigpio\Protocol\Bitmap;
 use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
@@ -42,17 +43,23 @@ class Notifier
      * @var resource
      */
     private $pipeHandle;
+    /**
+     * @var null|EventFactory
+     */
+    private $factory;
 
     /**
      * Notifier constructor.
      *
-     * @param Client $client
-     * @param string $pipeBase
+     * @param Client            $client
+     * @param string            $pipeBase
+     * @param EventFactory|null $factory
      */
-    public function __construct(Client $client, string $pipeBase = '/dev/pigpio')
+    public function __construct(Client $client, string $pipeBase = '/dev/pigpio', EventFactory $factory = null)
     {
         $this->client = $client;
         $this->pipeBase = $pipeBase;
+        $this->factory = $factory ?: new EventFactory();
     }
 
     public function __destruct()
@@ -169,12 +176,30 @@ class Notifier
 
     /**
      * Checks for new notification and calls the callback
+     *
+     * @param bool $blocking
      */
-    public function tick()
+    public function tick(bool $blocking = false)
     {
         if ($this->callback === null) {
             throw new NotStartedException('Notifier needs to be started first');
         }
+
+        for ($data = $this->readBlock($blocking); $data !== ''; $data = $this->readBlock(false)) {
+            $event = $this->factory->decode($data);
+            call_user_func($this->callback, $event);
+        }
+    }
+
+    /**
+     * @param bool $blocking
+     *
+     * @return string
+     */
+    private function readBlock(bool $blocking): string
+    {
+        stream_set_blocking($this->pipeHandle, $blocking);
+        return fread($this->pipeHandle, 12);
     }
 
     /**
