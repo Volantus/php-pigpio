@@ -2,7 +2,7 @@
 Notifications may be used for recognizing state changes of GPIO pins or custom events.
 
 ## Setup
-Receiving events for GPIO Pin 21
+Receiving events for GPIO pin 21
 ````php
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Notification\Event\GpioEvent;
@@ -24,10 +24,12 @@ while (true) {
 
 $notifier->cancel();
 ````
+### No remote support
+Library is using internally pipes, therefore Pigpio Deamon needs to run on the same system.
 
 ## Configure GPIO pins in scope
 Pins of interest are specified as Bitmap Object.
-Monitoring PIN 8, 12 and 16:
+Monitoring Pin 8, 12 and 16:
 ````php
 $notifier->start(new Bitmap([8, 12, 16]), function (GpioEvent $event) {
     // Handling events
@@ -55,8 +57,8 @@ To identify which type of event was fired, you may check the class or use the ab
 | **Sequence ID**      | :heavy_check_mark:                           | :heavy_check_mark:                                      | :heavy_check_mark:                                       | :heavy_check_mark:                                        |
 | **Ticks**            | :heavy_check_mark:                           | :heavy_check_mark:                                      | :heavy_check_mark:                                       | :heavy_check_mark:                                        |
 | **GPIO Status**      | :heavy_check_mark:                           | :heavy_check_mark:                                      | :heavy_check_mark:                                       | :heavy_check_mark:                                        |
-| **Special property** | :x:                                          | Event ID (0 - 31)                                       | :x:                                                      | GPIO ID of pin which timed out                            |
-| **Identification**   | ´->isAliveEvent()´                           | ´->istCustomEvent()´                                    | ´->isStateChangedEvent()´                                | ´->isTimeoutEvent()´                                      |
+| **Special property** | -                                            | Event ID (0 - 31)                                       | -                                                        | GPIO ID of pin which timed out                            |
+| **Identification**   | `->isAliveEvent()`                           | `->istCustomEvent()`                                    | `->isStateChangedEvent()`                                | ´->isTimeoutEvent()´                                      |
 | **Setup supported?** | No setup required                            | :x: Firing custom event current not supported by client | :heavy_check_mark: Default event                         | :x: Setting up timeout, currently not supported by client |
 
 #### Property: Sequence ID
