@@ -25,7 +25,7 @@ while (true) {
 $notifier->cancel();
 ````
 ### No remote support
-Library is using internally pipes, therefore Pigpio Deamon needs to run on the same system.
+Pigpio daemon needs to run on the same system, as library is using internally pipes.
 
 ## Configure GPIO pins in scope
 Pins of interest are specified as Bitmap Object.
@@ -58,7 +58,7 @@ To identify which type of event was fired, you may check the class or use the ab
 | **Ticks**            | :heavy_check_mark:                           | :heavy_check_mark:                                      | :heavy_check_mark:                                       | :heavy_check_mark:                                        |
 | **GPIO Status**      | :heavy_check_mark:                           | :heavy_check_mark:                                      | :heavy_check_mark:                                       | :heavy_check_mark:                                        |
 | **Special property** | -                                            | Event ID (0 - 31)                                       | -                                                        | GPIO ID of pin which timed out                            |
-| **Identification**   | `->isAliveEvent()`                           | `->istCustomEvent()`                                    | `->isStateChangedEvent()`                                | ´->isTimeoutEvent()´                                      |
+| **Identification**   | `->isAliveEvent()`                           | `->istCustomEvent()`                                    | `->isStateChangedEvent()`                                | `->isTimeoutEvent()`                                      |
 | **Setup supported?** | No setup required                            | :x: Firing custom event current not supported by client | :heavy_check_mark: Default event                         | :x: Setting up timeout, currently not supported by client |
 
 #### Property: Sequence ID
