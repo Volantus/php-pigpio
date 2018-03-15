@@ -58,7 +58,8 @@ $response->getResponse();  // some responses return data (P3)
 ```
 
 ### Unsigned response
-This special type of commands return always positive return values and are always successful.
+This special type of commands return only positive return values and are always successful.
+
 Reading GPIO 0-31:
 ```php
 use Volantus\Pigpio\Client;
@@ -77,6 +78,7 @@ $response->getResponse();  // hexadecimal bits of GPIO Pin 0-31
 ### Extended response
 Some commands return more just an integer return value.
 As the extension format is depending on the command, the extension format need to be specified as [unpack() syntax](http://php.net/manual/de/function.unpack.php) format
+
 Reading SPI signal with length of 4 bytes:
 ```php
 use Volantus\Pigpio\Client;
