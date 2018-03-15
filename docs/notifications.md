@@ -37,7 +37,7 @@ $notifier->start(new Bitmap([8, 12, 16]), function (GpioEvent $event) {
 ````
 
 ## Ticks
-To receive new events `$notifier->tick()` methods need to be called. The method checks for events in the pipe, decodes them and fires the callback.
+To receive new events `$notifier->tick()` method need to be called. The method checks for events in the pipe, decodes them and fires the callback.
 Ticks may be performed in blocking or non-blocking mode. 
 ### Blocking ticks
 `$notifier->tick(true)`
