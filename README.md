@@ -1,4 +1,6 @@
 # Pigpio client library for PHP
+[![Latest Stable Version](https://img.shields.io/packagist/v/volantus/php-pigpio.svg)](https://packagist.org/packages/volantus/php-pigpio)
+
 PHP client for the great [Pigpio daemon](http://abyz.me.uk/rpi/pigpio/pigpiod.html) library
 
 :bangbang: Alpha status:
