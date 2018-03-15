@@ -2,7 +2,7 @@
     "name": "volantus/php-pigpio",
     "description": "PHP client for the pigpio daemon library",
     "type": "library",
-    "license": "GNUv3",
+    "license": "GPL-3.0-only",
     "authors": [
         {
             "name": "Marius Meissner",
