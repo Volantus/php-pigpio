@@ -15,12 +15,12 @@ composer require volantus/php-pigpio
 
 ## Features
 Currently the following features are fully implemented.
-If your desired Pigpio feature is not fully supported, you may use raw requests.
+If your desired Pigpio feature is not fully supported, you may use [raw requests](https://github.com/Volantus/php-pigpio/blob/master/docs/raw-requests.md).
 
-| Feature                                                                                   | Status                             |
-|-------------------------------------------------------------------------------------------|------------------------------------|
-| [Notifications](https://github.com/Volantus/php-pigpio/blob/master/docs/notifications.md) | :heavy_check_mark: Fully supported |
-| Raw requests/response handling                                                            | :heavy_check_mark: Fully supported |
+| Feature                                                                                                   | Status                             |
+|-----------------------------------------------------------------------------------------------------------|------------------------------------|
+| [Notifications](https://github.com/Volantus/php-pigpio/blob/master/docs/notifications.md)                 | :heavy_check_mark: Fully supported |
+| [Raw requests/response handling](https://github.com/Volantus/php-pigpio/blob/master/docs/raw-requests.md) | :heavy_check_mark: Fully supported |
 
 ## Basic usage
 This library is interacting with Pigpio by using sockets. The core communication is handled by the Client class:
