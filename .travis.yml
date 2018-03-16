@@ -10,11 +10,8 @@ matrix:
     - php: nightly
   include:
     - php: 7.0
-      env: CC=clang
     - php: 7.1
-      env: CC=clang
     - php: 7.2
-      env: CC=clang
 install: composer install
 script:
   - vendor/phpunit/phpunit/phpunit
