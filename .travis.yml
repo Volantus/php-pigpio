@@ -1,0 +1,20 @@
+dist: precise
+language: php
+php:
+  - 7.0
+  - 7.1
+  - 7.2
+  - nightly
+matrix:
+  allow_failures:
+    - php: nightly
+  include:
+    - php: 7.0
+      env: CC=clang
+    - php: 7.1
+      env: CC=clang
+    - php: 7.2
+      env: CC=clang
+install: composer insstall
+script:
+  - vendor/phpunit/phpunit/phpunit
