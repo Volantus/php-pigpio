@@ -15,6 +15,6 @@ matrix:
       env: CC=clang
     - php: 7.2
       env: CC=clang
-install: composer insstall
+install: composer install
 script:
   - vendor/phpunit/phpunit/phpunit
