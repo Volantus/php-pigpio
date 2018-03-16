@@ -55,9 +55,9 @@ class Notifier
      * @param string            $pipeBase
      * @param EventFactory|null $factory
      */
-    public function __construct(Client $client, string $pipeBase = '/dev/pigpio', EventFactory $factory = null)
+    public function __construct(Client $client = null, string $pipeBase = '/dev/pigpio', EventFactory $factory = null)
     {
-        $this->client = $client;
+        $this->client = $client ?: new Client();
         $this->pipeBase = $pipeBase;
         $this->factory = $factory ?: new EventFactory();
     }
