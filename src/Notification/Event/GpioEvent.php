@@ -66,6 +66,19 @@ abstract class GpioEvent
     }
 
     /**
+     * @param int $pin
+     *
+     * @return GpioStatus|null
+     */
+    public function getStatus(int $pin)
+    {
+        $pin--;
+        return isset($this->gpioStatus[$pin])
+                ? $this->gpioStatus[$pin]
+                : null;
+    }
+
+    /**
      * @return bool
      */
     public abstract function istCustomEvent(): bool;

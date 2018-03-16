@@ -114,6 +114,11 @@ class EventFactoryTest extends TestCase
                 self::assertFalse($status->isHigh(), 'Failed asserting that pin ' . $status->getPin() . ' is low');
             }
         }
+
+        self::assertNotNull($result->getStatus(16));
+        self::assertEquals(16, $result->getStatus(16)->getPin());
+        self::assertNotNull($result->getStatus(21));
+        self::assertEquals(21, $result->getStatus(21)->getPin());
     }
 
     /**
