@@ -3,6 +3,7 @@ namespace Volantus\Pigpio\SPI;
 
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
+use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
 
 /**
@@ -17,6 +18,7 @@ class RegularSpiDevice
     const PI_BAD_FLAGS       = -77;
     const PI_NO_AUX_SPI      = -91;
     const PI_SPI_OPEN_FAILED = -73;
+    const PI_BAD_HANDLE      = -25;
 
     /**
      * @var Client
@@ -56,5 +58,29 @@ class RegularSpiDevice
         }
 
         $this->handle = $response->getResponse();
+    }
+
+    public function close()
+    {
+        if ($this->handle === null) {
+            return;
+        }
+
+        $request = new DefaultRequest(Commands::SPIC, $this->handle, 0);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            throw ClosingDeviceFailedException::create($response);
+        }
+
+        $this->handle = null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOpen(): bool
+    {
+        return $this->handle !== null;
     }
 }

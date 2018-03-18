@@ -5,6 +5,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
+use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\SPI\RegularSpiDevice;
@@ -40,6 +41,7 @@ class RegularSpiDeviceTest extends TestCase
             ->willReturn(new Response(4));
 
         $this->device->open(1, 32000, 32);
+        self::assertTrue($this->device->isOpen());
     }
 
     public function test_open_calledTwice_idempotent()
@@ -51,6 +53,7 @@ class RegularSpiDeviceTest extends TestCase
 
         $this->device->open(1, 32000, 32);
         $this->device->open(0, 32000, 32);
+        self::assertTrue($this->device->isOpen());
     }
 
     /**
@@ -141,5 +144,68 @@ class RegularSpiDeviceTest extends TestCase
             ->willReturn(new Response(-512));
 
         $this->device->open(0, 32000, 0);
+    }
+
+    public function test_close_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::SPIC, 49, 0)))
+            ->willReturn(new Response(0));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->close();
+
+        self::assertFalse($this->device->isOpen());
+    }
+
+    public function test_close_notOpen_idempotent()
+    {
+        $this->device->close();
+        self::assertFalse($this->device->isOpen());
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
+     * @expectedExceptionMessage Closing SPI device failed => daemon responded that wrong handle was given (PI_BAD_HANDLE)
+     */
+    public function test_close_failed_wrongHandle()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_HANDLE);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->close();
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
+     * @expectedExceptionMessage Closing SPI device failed => unknown error
+     */
+    public function test_close_failed_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->close();
     }
 }
