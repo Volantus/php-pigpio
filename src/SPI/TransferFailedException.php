@@ -27,6 +27,9 @@ class TransferFailedException extends \RuntimeException
             case Commands::SPIW:
                 $operation = 'Writing to SPI device';
                 break;
+            case Commands::SPIX:
+                $operation = 'SPI cross transfer';
+                break;
             default:
                 $operation = 'Unknown operation';
         }

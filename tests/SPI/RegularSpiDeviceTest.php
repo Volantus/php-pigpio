@@ -293,7 +293,7 @@ class RegularSpiDeviceTest extends TestCase
             ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
 
         $this->device->open(1, 32000, 0);
-        $this->device->read(-1);
+        $this->device->read(2);
     }
 
     /**
@@ -313,6 +313,218 @@ class RegularSpiDeviceTest extends TestCase
             ->willReturn(new Response(-512));
 
         $this->device->open(1, 32000, 0);
-        $this->device->read(-1);
+        $this->device->read(2);
+    }
+
+
+    public function test_write_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new ExtensionRequest(Commands::SPIW, 49, 0, 'C*', [32, 64])))
+            ->willReturn(new Response(0));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->write([32, 64]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\DeviceNotOpenException
+     * @expectedExceptionMessage Device needs to be opened first for writing
+     */
+    public function test_write_notOpen()
+    {
+        $this->device->write([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Writing to SPI device failed => bad handle (PI_BAD_HANDLE)
+     */
+    public function test_write_badHandle()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_HANDLE);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->write([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Writing to SPI device failed => bad count given (PI_BAD_SPI_COUNT)
+     */
+    public function test_write_badCount()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_SPI_COUNT);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->write([]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Writing to SPI device failed => data transfer failed (PI_SPI_XFER_FAILED)
+     */
+    public function test_write_transferFailed()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_SPI_XFER_FAILED);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->write([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Writing to SPI device failed => unknown error
+     */
+    public function test_write_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->write([32]);
+    }
+
+    public function test_crossTransfer_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new ExtensionRequest(Commands::SPIX, 49, 0, 'C*', [32, 64], new ExtensionResponseStructure('C*'))))
+            ->willReturn(new Response(0, [16, 18, 19]));
+
+        $this->device->open(1, 32000, 0);
+        $result = $this->device->crossTransfer([32, 64]);
+
+        self::assertEquals([16, 18, 19], $result);
+    }
+
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\DeviceNotOpenException
+     * @expectedExceptionMessage Device needs to be opened first for cross transfer
+     */
+    public function test_crossTransfer_notOpen()
+    {
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage SPI cross transfer failed => bad handle (PI_BAD_HANDLE)
+     */
+    public function test_crossTransfer_badHandle()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_HANDLE);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage SPI cross transfer failed => bad count given (PI_BAD_SPI_COUNT)
+     */
+    public function test_crossTransfer_badCount()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_SPI_COUNT);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->crossTransfer([]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage SPI cross transfer failed => data transfer failed (PI_SPI_XFER_FAILED)
+     */
+    public function test_crossTransfer_transferFailed()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_SPI_XFER_FAILED);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage SPI cross transfer failed => unknown error
+     */
+    public function test_crossTransfer_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->crossTransfer([32]);
     }
 }

@@ -109,6 +109,30 @@ class RegularSpiDevice
     }
 
     /**
+     * Writes the given data to SPI device and read simultaneously the same amount (byte count) of data
+     * Returns one (unsigned) byte per array item
+     *
+     * @param array $data
+     *
+     * @return array
+     */
+    public function crossTransfer(array $data): array
+    {
+        if ($this->handle === null) {
+            throw new DeviceNotOpenException('Device needs to be opened first for cross transfer');
+        }
+
+        $request = new ExtensionRequest(Commands::SPIX, $this->handle, 0, 'C*', $data, new ExtensionResponseStructure('C*'));
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            throw TransferFailedException::create($request, $response);
+        }
+
+        return array_values($response->getExtension());
+    }
+
+    /**
      * Closes the SPI device (frees the handle)
      */
     public function close()
