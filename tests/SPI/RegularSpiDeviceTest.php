@@ -31,7 +31,7 @@ class RegularSpiDeviceTest extends TestCase
     protected function setUp()
     {
         $this->client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
-        $this->device = new RegularSpiDevice($this->client);
+        $this->device = new RegularSpiDevice($this->client, 1, 32000, 32);
     }
 
     public function test_open_correctRequest()
@@ -41,7 +41,7 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new ExtensionRequest(Commands::SPIO, 1, 32000, 'L', [32])))
             ->willReturn(new Response(4));
 
-        $this->device->open(1, 32000, 32);
+        $this->device->open();
         self::assertTrue($this->device->isOpen());
     }
 
@@ -52,8 +52,8 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new ExtensionRequest(Commands::SPIO, 1, 32000, 'L', [32])))
             ->willReturn(new Response(4));
 
-        $this->device->open(1, 32000, 32);
-        $this->device->open(0, 32000, 32);
+        $this->device->open();
+        $this->device->open();
         self::assertTrue($this->device->isOpen());
     }
 
@@ -69,7 +69,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_CHANNEL));
 
-        $this->device->open(8, 32000, 0);
+        $this->device->open();
     }
 
     /**
@@ -84,7 +84,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_SPEED));
 
-        $this->device->open(0, -1, 0);
+        $this->device->open();
     }
 
     /**
@@ -99,7 +99,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_FLAGS));
 
-        $this->device->open(0, 32000, -100);
+        $this->device->open();
     }
 
     /**
@@ -114,7 +114,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_NO_AUX_SPI));
 
-        $this->device->open(0, 32000, -100);
+        $this->device->open();
     }
 
     /**
@@ -129,7 +129,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_SPI_OPEN_FAILED));
 
-        $this->device->open(0, 32000, 0);
+        $this->device->open();
     }
 
     /**
@@ -144,7 +144,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(-512));
 
-        $this->device->open(0, 32000, 0);
+        $this->device->open();
     }
 
     public function test_close_correctRequest()
@@ -158,7 +158,7 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new DefaultRequest(Commands::SPIC, 49, 0)))
             ->willReturn(new Response(0));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->close();
 
         self::assertFalse($this->device->isOpen());
@@ -186,7 +186,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->close();
     }
 
@@ -206,7 +206,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(-512));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->close();
     }
 
@@ -221,7 +221,7 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new DefaultRequest(Commands::SPIR, 49, 2, new ExtensionResponseStructure('C*'))))
             ->willReturn(new Response(0, [1 => 64, 2 => 128]));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $result = $this->device->read(2);
 
         self::assertEquals([64, 128], $result);
@@ -252,7 +252,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->read(2);
     }
 
@@ -272,7 +272,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->read(-1);
     }
 
@@ -292,7 +292,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->read(2);
     }
 
@@ -312,7 +312,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(-512));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->read(2);
     }
 
@@ -328,7 +328,7 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new ExtensionRequest(Commands::SPIW, 49, 0, 'C*', [32, 64])))
             ->willReturn(new Response(0));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->write([32, 64]);
     }
 
@@ -357,7 +357,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->write([32]);
     }
 
@@ -377,7 +377,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->write([]);
     }
 
@@ -397,7 +397,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->write([32]);
     }
 
@@ -417,7 +417,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(-512));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->write([32]);
     }
 
@@ -432,7 +432,7 @@ class RegularSpiDeviceTest extends TestCase
             ->with(self::equalTo(new ExtensionRequest(Commands::SPIX, 49, 0, 'C*', [32, 64], new ExtensionResponseStructure('C*'))))
             ->willReturn(new Response(0, [16, 18, 19]));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $result = $this->device->crossTransfer([32, 64]);
 
         self::assertEquals([16, 18, 19], $result);
@@ -464,7 +464,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->crossTransfer([32]);
     }
 
@@ -484,7 +484,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->crossTransfer([]);
     }
 
@@ -504,7 +504,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->crossTransfer([32]);
     }
 
@@ -524,7 +524,7 @@ class RegularSpiDeviceTest extends TestCase
             ->method('sendRaw')
             ->willReturn(new Response(-512));
 
-        $this->device->open(1, 32000, 0);
+        $this->device->open();
         $this->device->crossTransfer([32]);
     }
 }

@@ -34,28 +34,45 @@ class RegularSpiDevice
     private $handle;
 
     /**
-     * @param Client $client
+     * @var int
      */
-    public function __construct(Client $client)
+    private $channel;
+
+    /**
+     * @var int
+     */
+    private $baudRate;
+
+    /**
+     * @var int
+     */
+    private $flags;
+
+    /**
+     * @param Client $client
+     * @param int    $channel  SPI channel (0 or 1)
+     * @param int    $baudRate Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param int    $flags    Optional flags
+     */
+    public function __construct(Client $client, int $channel, int $baudRate, int $flags = 0)
     {
         $this->client = $client;
+        $this->channel = $channel;
+        $this->baudRate = $baudRate;
+        $this->flags = $flags;
     }
 
     /**
      * Opens the SPI device (fetches a handle)
-     *
-     * @param int $channel   SPI channel (0 or 1)
-     * @param int $baudRate  Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int $flags     Optional flags
      */
-    public function open(int $channel, int $baudRate, int $flags = 0)
+    public function open()
     {
         // Already open?
         if ($this->handle !== null) {
             return;
         }
 
-        $request = new ExtensionRequest(Commands::SPIO, $channel, $baudRate, 'L', [$flags]);
+        $request = new ExtensionRequest(Commands::SPIO, $this->channel, $this->baudRate, 'L', [$this->flags]);
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
@@ -157,5 +174,37 @@ class RegularSpiDevice
     public function isOpen(): bool
     {
         return $this->handle !== null;
+    }
+
+    /**
+     * @return int
+     */
+    public function getHandle(): int
+    {
+        return $this->handle;
+    }
+
+    /**
+     * @return int
+     */
+    public function getChannel(): int
+    {
+        return $this->channel;
+    }
+
+    /**
+     * @return int
+     */
+    public function getBaudRate(): int
+    {
+        return $this->baudRate;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFlags(): int
+    {
+        return $this->flags;
     }
 }
