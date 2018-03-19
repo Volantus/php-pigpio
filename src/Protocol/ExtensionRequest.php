@@ -98,4 +98,12 @@ class ExtensionRequest implements Request
 
         return call_user_func_array('pack', $packParameters);
     }
+
+    /**
+     * @return int
+     */
+    public function getCommand(): int
+    {
+        return $this->command;
+    }
 }

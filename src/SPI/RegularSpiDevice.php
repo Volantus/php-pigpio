@@ -83,10 +83,29 @@ class RegularSpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw TransferFailedException::createForReadOperation($response);
+            throw TransferFailedException::create($request, $response);
         }
 
         return array_values($response->getExtension());
+    }
+
+    /**
+     * Writes data to the SPI device
+     *
+     * @param array $data One unsigned byte (0 - 255) per array item
+     */
+    public function write(array $data)
+    {
+        if ($this->handle === null) {
+            throw new DeviceNotOpenException('Device needs to be opened first for writing');
+        }
+
+        $request = new ExtensionRequest(Commands::SPIW, $this->handle, 0, 'C*', $data);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            throw TransferFailedException::create($request, $response);
+        }
     }
 
     /**

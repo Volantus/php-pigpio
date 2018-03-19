@@ -17,4 +17,9 @@ interface Request
      * @return ResponseStructure
      */
     public function getResponseStructure(): ResponseStructure;
+
+    /**
+     * @return int
+     */
+    public function getCommand(): int;
 }
