@@ -15,6 +15,9 @@ use Volantus\Pigpio\Protocol\Request;
  */
 class RegularSpiDevice extends SpiDevice
 {
+    const PI_SPI_OPEN_FAILED = -73;
+    const PI_BAD_SPI_SPEED   = -78;
+    const PI_BAD_HANDLE      = -25;
     const PI_BAD_SPI_CHANNEL = -76;
     const PI_BAD_FLAGS       = -77;
     const PI_NO_AUX_SPI      = -91;
@@ -22,17 +25,23 @@ class RegularSpiDevice extends SpiDevice
     const PI_SPI_XFER_FAILED = -89;
 
     /**
+     * @var int
+     */
+    private $channel;
+
+    /**
      * RegularSpiDevice constructor.
      *
      * @param Client       $client
-     * @param int          $channel
-     * @param int          $baudRate
-     * @param int          $flags
+     * @param int          $channel       SPI channel (0 or 1)
+     * @param int          $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param int          $flags         Optional flags
      * @param ErrorHandler $errorHandler
      */
-    public function __construct(Client $client, $channel, $baudRate, $flags = 0, ErrorHandler $errorHandler = null)
+    public function __construct(Client $client, int $channel, int $baudRate, int $flags = 0, ErrorHandler $errorHandler = null)
     {
-        parent::__construct($client, $channel, $baudRate, $flags, $errorHandler ?: new RegularDeviceErrorHandler());
+        parent::__construct($client, $baudRate, $flags, $errorHandler ?: new RegularDeviceErrorHandler());
+        $this->channel = $channel;
     }
 
     /**
@@ -53,7 +62,7 @@ class RegularSpiDevice extends SpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            $this->errorHandler->handle($request, $response);
+            $this->errorHandler->handleTransfer($request, $response);
         }
 
         return array_values($response->getExtension());
@@ -74,7 +83,7 @@ class RegularSpiDevice extends SpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            $this->errorHandler->handle($request, $response);
+            $this->errorHandler->handleTransfer($request, $response);
         }
     }
 

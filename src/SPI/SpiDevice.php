@@ -11,10 +11,6 @@ use Volantus\Pigpio\Protocol\Request;
  */
 abstract class SpiDevice
 {
-    const PI_SPI_OPEN_FAILED = -73;
-    const PI_BAD_SPI_SPEED   = -78;
-    const PI_BAD_HANDLE      = -25;
-
     /**
      * @var Client
      */
@@ -24,11 +20,6 @@ abstract class SpiDevice
      * @var int
      */
     protected $handle;
-
-    /**
-     * @var int
-     */
-    protected $channel;
 
     /**
      * @var int
@@ -47,15 +38,13 @@ abstract class SpiDevice
 
     /**
      * @param Client       $client
-     * @param int          $channel  SPI channel (0 or 1)
-     * @param int          $baudRate Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int          $flags    Optional flags
+     * @param int          $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param int          $flags         Optional flags
      * @param ErrorHandler $errorHandler
      */
-    public function __construct(Client $client, int $channel, int $baudRate, int $flags = 0, ErrorHandler $errorHandler)
+    public function __construct(Client $client, int $baudRate, int $flags = 0, ErrorHandler $errorHandler)
     {
         $this->client = $client;
-        $this->channel = $channel;
         $this->baudRate = $baudRate;
         $this->flags = $flags;
         $this->errorHandler = $errorHandler;
@@ -75,7 +64,7 @@ abstract class SpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw OpeningDeviceFailedException::create($response);
+            $this->errorHandler->handleOpen($response);
         }
 
         $this->handle = $response->getResponse();
@@ -99,7 +88,7 @@ abstract class SpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            $this->errorHandler->handle($request, $response);
+            $this->errorHandler->handleTransfer($request, $response);
         }
 
         return array_values($response->getExtension());
@@ -118,7 +107,7 @@ abstract class SpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw ClosingDeviceFailedException::create($response);
+            $this->errorHandler->handleClose($response);
         }
 
         $this->handle = null;
@@ -156,14 +145,6 @@ abstract class SpiDevice
     public function getHandle(): int
     {
         return $this->handle;
-    }
-
-    /**
-     * @return int
-     */
-    public function getChannel(): int
-    {
-        return $this->channel;
     }
 
     /**

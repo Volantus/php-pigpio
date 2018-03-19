@@ -17,5 +17,19 @@ interface ErrorHandler
      *
      * @return mixed
      */
-    public function handle(Request $request, Response $response);
+    public function handleTransfer(Request $request, Response $response);
+
+    /**
+     * @param Response $response
+     *
+     * @return mixed
+     */
+    public function handleOpen(Response $response);
+
+    /**
+     * @param Response $response
+     *
+     * @return mixed
+     */
+    public function handleClose(Response $response);
 }
