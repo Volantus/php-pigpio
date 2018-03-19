@@ -7,6 +7,7 @@ use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
+use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\SPI\RegularSpiDevice;
 
@@ -207,5 +208,111 @@ class RegularSpiDeviceTest extends TestCase
 
         $this->device->open(1, 32000, 0);
         $this->device->close();
+    }
+
+    public function test_read_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::SPIR, 49, 2, new ExtensionResponseStructure('C*'))))
+            ->willReturn(new Response(0, [1 => 64, 2 => 128]));
+
+        $this->device->open(1, 32000, 0);
+        $result = $this->device->read(2);
+
+        self::assertEquals([64, 128], $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\DeviceNotOpenException
+     * @expectedExceptionMessage Device needs to be opened first for reading
+     */
+    public function test_read_notOpen()
+    {
+        $this->device->read(4);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Reading from SPI device failed => bad handle (PI_BAD_HANDLE)
+     */
+    public function test_read_badHandle()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_HANDLE);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_HANDLE));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->read(2);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Reading from SPI device failed => bad count given (PI_BAD_SPI_COUNT)
+     */
+    public function test_read_badCount()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_BAD_SPI_COUNT);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_BAD_SPI_COUNT));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->read(-1);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Reading from SPI device failed => data transfer failed (PI_SPI_XFER_FAILED)
+     */
+    public function test_read_transferFailed()
+    {
+        $this->expectExceptionCode(RegularSpiDevice::PI_SPI_XFER_FAILED);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(RegularSpiDevice::PI_SPI_XFER_FAILED));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->read(-1);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Reading from SPI device failed => unknown error
+     */
+    public function test_read_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(49));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open(1, 32000, 0);
+        $this->device->read(-1);
     }
 }
