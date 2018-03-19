@@ -6,80 +6,33 @@ use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
 use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
+use Volantus\Pigpio\Protocol\Request;
 
 /**
  * Class SpiInterface
  *
  * @package Volantus\Pigpio\SPI
  */
-class RegularSpiDevice
+class RegularSpiDevice extends SpiDevice
 {
     const PI_BAD_SPI_CHANNEL = -76;
-    const PI_BAD_SPI_SPEED   = -78;
     const PI_BAD_FLAGS       = -77;
     const PI_NO_AUX_SPI      = -91;
-    const PI_SPI_OPEN_FAILED = -73;
-    const PI_BAD_HANDLE      = -25;
     const PI_BAD_SPI_COUNT   = -84;
     const PI_SPI_XFER_FAILED = -89;
 
     /**
-     * @var Client
+     * RegularSpiDevice constructor.
+     *
+     * @param Client       $client
+     * @param int          $channel
+     * @param int          $baudRate
+     * @param int          $flags
+     * @param ErrorHandler $errorHandler
      */
-    private $client;
-
-    /**
-     * @var int
-     */
-    private $handle;
-
-    /**
-     * @var int
-     */
-    private $channel;
-
-    /**
-     * @var int
-     */
-    private $baudRate;
-
-    /**
-     * @var int
-     */
-    private $flags;
-
-    /**
-     * @param Client $client
-     * @param int    $channel  SPI channel (0 or 1)
-     * @param int    $baudRate Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int    $flags    Optional flags
-     */
-    public function __construct(Client $client, int $channel, int $baudRate, int $flags = 0)
+    public function __construct(Client $client, $channel, $baudRate, $flags = 0, ErrorHandler $errorHandler = null)
     {
-        $this->client = $client;
-        $this->channel = $channel;
-        $this->baudRate = $baudRate;
-        $this->flags = $flags;
-    }
-
-    /**
-     * Opens the SPI device (fetches a handle)
-     */
-    public function open()
-    {
-        // Already open?
-        if ($this->handle !== null) {
-            return;
-        }
-
-        $request = new ExtensionRequest(Commands::SPIO, $this->channel, $this->baudRate, 'L', [$this->flags]);
-        $response = $this->client->sendRaw($request);
-
-        if (!$response->isSuccessful()) {
-            throw OpeningDeviceFailedException::create($response);
-        }
-
-        $this->handle = $response->getResponse();
+        parent::__construct($client, $channel, $baudRate, $flags, $errorHandler ?: new RegularDeviceErrorHandler());
     }
 
     /**
@@ -100,7 +53,7 @@ class RegularSpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw TransferFailedException::create($request, $response);
+            $this->errorHandler->handle($request, $response);
         }
 
         return array_values($response->getExtension());
@@ -121,90 +74,33 @@ class RegularSpiDevice
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw TransferFailedException::create($request, $response);
+            $this->errorHandler->handle($request, $response);
         }
     }
 
     /**
-     * Writes the given data to SPI device and read simultaneously the same amount (byte count) of data
-     * Returns one (unsigned) byte per array item
-     *
      * @param array $data
      *
-     * @return array
+     * @return Request
      */
-    public function crossTransfer(array $data): array
+    protected function getCrossTransferRequest(array $data): Request
     {
-        if ($this->handle === null) {
-            throw new DeviceNotOpenException('Device needs to be opened first for cross transfer');
-        }
-
-        $request = new ExtensionRequest(Commands::SPIX, $this->handle, 0, 'C*', $data, new ExtensionResponseStructure('C*'));
-        $response = $this->client->sendRaw($request);
-
-        if (!$response->isSuccessful()) {
-            throw TransferFailedException::create($request, $response);
-        }
-
-        return array_values($response->getExtension());
+        return new ExtensionRequest(Commands::SPIX, $this->handle, 0, 'C*', $data, new ExtensionResponseStructure('C*'));
     }
 
     /**
-     * Closes the SPI device (frees the handle)
+     * @return Request
      */
-    public function close()
+    protected function getOpenRequest(): Request
     {
-        if ($this->handle === null) {
-            return;
-        }
-
-        $request = new DefaultRequest(Commands::SPIC, $this->handle, 0);
-        $response = $this->client->sendRaw($request);
-
-        if (!$response->isSuccessful()) {
-            throw ClosingDeviceFailedException::create($response);
-        }
-
-        $this->handle = null;
+        return new ExtensionRequest(Commands::SPIO, $this->channel, $this->baudRate, 'L', [$this->flags]);
     }
 
     /**
-     * @return bool
+     * @return Request
      */
-    public function isOpen(): bool
+    protected function getCloseRequest(): Request
     {
-        return $this->handle !== null;
-    }
-
-    /**
-     * @return int
-     */
-    public function getHandle(): int
-    {
-        return $this->handle;
-    }
-
-    /**
-     * @return int
-     */
-    public function getChannel(): int
-    {
-        return $this->channel;
-    }
-
-    /**
-     * @return int
-     */
-    public function getBaudRate(): int
-    {
-        return $this->baudRate;
-    }
-
-    /**
-     * @return int
-     */
-    public function getFlags(): int
-    {
-        return $this->flags;
+        return new DefaultRequest(Commands::SPIC, $this->handle, 0);
     }
 }
