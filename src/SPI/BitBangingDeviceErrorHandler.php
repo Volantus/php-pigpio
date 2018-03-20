@@ -53,6 +53,16 @@ class BitBangingDeviceErrorHandler implements ErrorHandler
      */
     public function handleClose(Response $response)
     {
-        // TODO: Implement handleClose() method.
+        switch ($response->getResponse()) {
+            case BitBaningSpiDevice::PI_BAD_USER_GPIO:
+                throw new ClosingDeviceFailedException('Closing device failed (internal library error) => bad GPIO pin given (PI_BAD_USER_GPIO)', BitBaningSpiDevice::PI_BAD_USER_GPIO);
+                break;
+            case BitBaningSpiDevice::PI_NOT_SPI_GPIO:
+                throw new ClosingDeviceFailedException('Closing device failed (internal library error) => no SPI action in progress on this pin(PI_NOT_SPI_GPIO)', BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+                break;
+            default:
+                throw new ClosingDeviceFailedException('Closing device failed => unknown error', $response->getResponse());
+                break;
+        }
     }
 }

@@ -18,6 +18,7 @@ class BitBaningSpiDevice extends SpiDevice
     const PI_BAD_SPI_BAUD  = -141;
     const PI_BAD_USER_GPIO = -2;
     const PI_GPIO_IN_USE   = -50;
+    const PI_NOT_SPI_GPIO  = -142;
 
     /**
      * @var int

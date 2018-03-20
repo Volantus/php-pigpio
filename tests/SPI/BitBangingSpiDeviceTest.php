@@ -5,6 +5,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
+use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\SPI\BitBaningSpiDevice;
@@ -114,5 +115,99 @@ class BitBangingSpiDeviceTest extends TestCase
             ->willReturn(new Response(-512));
 
         $this->device->open();
+    }
+
+
+    public function test_close_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::BSPIC, 6, 0)))
+            ->willReturn(new Response(0));
+
+        $this->device->open();
+        $this->device->close();
+        self::assertFalse($this->device->isOpen());
+    }
+
+    public function test_close_idempotent()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::BSPIC, 6, 0)))
+            ->willReturn(new Response(0));
+
+        $this->device->open();
+        $this->device->close();
+        $this->device->close();
+        self::assertFalse($this->device->isOpen());
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
+     * @expectedExceptionMessage Closing device failed (internal library error) => bad GPIO pin given (PI_BAD_USER_GPIO)
+     */
+    public function test_close_badGpioPin()
+    {
+        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_USER_GPIO);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_USER_GPIO));
+
+        $this->device->open();
+        $this->device->close();
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
+     * @expectedExceptionMessage Closing device failed (internal library error) => no SPI action in progress on this pin(PI_NOT_SPI_GPIO)
+     */
+    public function test_close_noSpiInProgress()
+    {
+        $this->expectExceptionCode(BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(BitBaningSpiDevice::PI_NOT_SPI_GPIO));
+
+        $this->device->open();
+        $this->device->close();
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
+     * @expectedExceptionMessage Closing device failed => unknown error
+     */
+    public function test_close_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open();
+        $this->device->close();
     }
 }
