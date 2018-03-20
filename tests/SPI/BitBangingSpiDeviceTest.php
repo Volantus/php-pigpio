@@ -7,6 +7,7 @@ use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
+use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\SPI\BitBaningSpiDevice;
 use Volantus\Pigpio\SPI\RegularSpiDevice;
@@ -117,7 +118,6 @@ class BitBangingSpiDeviceTest extends TestCase
         $this->device->open();
     }
 
-
     public function test_close_correctRequest()
     {
         $this->client->expects(self::at(0))
@@ -173,7 +173,7 @@ class BitBangingSpiDeviceTest extends TestCase
 
     /**
      * @expectedException \Volantus\Pigpio\SPI\ClosingDeviceFailedException
-     * @expectedExceptionMessage Closing device failed (internal library error) => no SPI action in progress on this pin(PI_NOT_SPI_GPIO)
+     * @expectedExceptionMessage Closing device failed (internal library error) => no SPI action in progress on this pin (PI_NOT_SPI_GPIO)
      */
     public function test_close_noSpiInProgress()
     {
@@ -209,5 +209,91 @@ class BitBangingSpiDeviceTest extends TestCase
 
         $this->device->open();
         $this->device->close();
+    }
+
+    public function test_crossTransfer_correctRequest()
+    {
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->with(self::equalTo(new ExtensionRequest(Commands::BSPIX, 6, 0, 'C*', [32, 64], new ExtensionResponseStructure('C*'))))
+            ->willReturn(new Response(0, [16, 18, 19]));
+
+        $this->device->open();
+        $result = $this->device->crossTransfer([32, 64]);
+
+        self::assertEquals([16, 18, 19], $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\DeviceNotOpenException
+     * @expectedExceptionMessage Device needs to be opened first for cross transfer
+     */
+    public function test_crossTransfer_notOpen()
+    {
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Cross transfer failed (internal library error) => bad GPIO pin given (PI_BAD_USER_GPIO)
+     */
+    public function test_crossTransfer_badGpioPin()
+    {
+        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_USER_GPIO);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_USER_GPIO));
+
+        $this->device->open();
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Cross transfer failed (internal library error) => no SPI action in progress on this pin (PI_NOT_SPI_GPIO)
+     */
+    public function test_crossTransfer_noSpiInProgress()
+    {
+        $this->expectExceptionCode(BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(BitBaningSpiDevice::PI_NOT_SPI_GPIO));
+
+        $this->device->open();
+        $this->device->crossTransfer([32]);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\SPI\TransferFailedException
+     * @expectedExceptionMessage Cross transfer failed => unknown error
+     */
+    public function test_crossTransfer_unknownError()
+    {
+        $this->expectExceptionCode(-512);
+
+        $this->client->expects(self::at(0))
+            ->method('sendRaw')
+            ->willReturn(new Response(0));
+
+        $this->client->expects(self::at(1))
+            ->method('sendRaw')
+            ->willReturn(new Response(-512));
+
+        $this->device->open();
+        $this->device->crossTransfer([32]);
     }
 }

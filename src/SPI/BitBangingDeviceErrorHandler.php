@@ -20,7 +20,17 @@ class BitBangingDeviceErrorHandler implements ErrorHandler
      */
     public function handleTransfer(Request $request, Response $response)
     {
-        // TODO: Implement handleTransfer() method.
+        switch ($response->getResponse()) {
+            case BitBaningSpiDevice::PI_BAD_USER_GPIO:
+                throw new TransferFailedException('Cross transfer failed (internal library error) => bad GPIO pin given (PI_BAD_USER_GPIO)', BitBaningSpiDevice::PI_BAD_USER_GPIO);
+                break;
+            case BitBaningSpiDevice::PI_NOT_SPI_GPIO:
+                throw new TransferFailedException('Cross transfer failed (internal library error) => no SPI action in progress on this pin (PI_NOT_SPI_GPIO)', BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+                break;
+            default:
+                throw new TransferFailedException('Cross transfer failed => unknown error', $response->getResponse());
+                break;
+        }
     }
 
     /**
@@ -58,7 +68,7 @@ class BitBangingDeviceErrorHandler implements ErrorHandler
                 throw new ClosingDeviceFailedException('Closing device failed (internal library error) => bad GPIO pin given (PI_BAD_USER_GPIO)', BitBaningSpiDevice::PI_BAD_USER_GPIO);
                 break;
             case BitBaningSpiDevice::PI_NOT_SPI_GPIO:
-                throw new ClosingDeviceFailedException('Closing device failed (internal library error) => no SPI action in progress on this pin(PI_NOT_SPI_GPIO)', BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+                throw new ClosingDeviceFailedException('Closing device failed (internal library error) => no SPI action in progress on this pin (PI_NOT_SPI_GPIO)', BitBaningSpiDevice::PI_NOT_SPI_GPIO);
                 break;
             default:
                 throw new ClosingDeviceFailedException('Closing device failed => unknown error', $response->getResponse());
