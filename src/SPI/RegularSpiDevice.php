@@ -32,15 +32,15 @@ class RegularSpiDevice extends SpiDevice
     /**
      * RegularSpiDevice constructor.
      *
-     * @param Client       $client
-     * @param int          $channel       SPI channel (0 or 1)
-     * @param int          $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int          $flags         Optional flags
-     * @param ErrorHandler $errorHandler
+     * @param Client        $client
+     * @param int           $channel       SPI channel (0 or 1)
+     * @param int           $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param SpiFlags|null $flags         Optional flags
+     * @param ErrorHandler  $errorHandler
      */
-    public function __construct(Client $client, int $channel, int $baudRate, int $flags = 0, ErrorHandler $errorHandler = null)
+    public function __construct(Client $client, int $channel, int $baudRate, SpiFlags $flags = null, ErrorHandler $errorHandler = null)
     {
-        parent::__construct($client, $baudRate, $flags, $errorHandler ?: new RegularDeviceErrorHandler());
+        parent::__construct($client, $baudRate, $errorHandler ?: new RegularDeviceErrorHandler(), $flags);
         $this->channel = $channel;
     }
 

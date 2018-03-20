@@ -37,16 +37,16 @@ abstract class SpiDevice
     protected $errorHandler;
 
     /**
-     * @param Client       $client
-     * @param int          $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int          $flags         Optional flags
-     * @param ErrorHandler $errorHandler
+     * @param Client        $client
+     * @param int           $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param ErrorHandler  $errorHandler
+     * @param SpiFlags|null $flags         Optional flags
      */
-    public function __construct(Client $client, int $baudRate, int $flags = 0, ErrorHandler $errorHandler)
+    public function __construct(Client $client, int $baudRate, ErrorHandler $errorHandler, SpiFlags $flags = null)
     {
         $this->client = $client;
         $this->baudRate = $baudRate;
-        $this->flags = $flags;
+        $this->flags = $flags ? $flags->getFlags() : 0;
         $this->errorHandler = $errorHandler;
     }
 

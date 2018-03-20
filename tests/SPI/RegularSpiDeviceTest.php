@@ -10,6 +10,7 @@ use Volantus\Pigpio\Protocol\ExtensionRequest;
 use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\SPI\RegularSpiDevice;
+use Volantus\Pigpio\SPI\SpiFlags;
 
 /**
  * Class RegularSpiDeviceTest
@@ -31,7 +32,19 @@ class RegularSpiDeviceTest extends TestCase
     protected function setUp()
     {
         $this->client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
-        $this->device = new RegularSpiDevice($this->client, 1, 32000, 32);
+        $this->device = new RegularSpiDevice($this->client, 1, 32000, new SpiFlags(['notReserved' => [0]]));
+    }
+
+    public function test_construct_flagsNull()
+    {
+        $this->device = new RegularSpiDevice($this->client, 1, 32000, null);
+
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new ExtensionRequest(Commands::SPIO, 1, 32000, 'L', [0])))
+            ->willReturn(new Response(4));
+
+        $this->device->open();
     }
 
     public function test_open_correctRequest()

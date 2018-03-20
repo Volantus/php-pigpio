@@ -43,18 +43,18 @@ class BitBaningSpiDevice extends SpiDevice
     /**
      * BitBaningSpiDevice constructor.
      *
-     * @param Client       $client
-     * @param int          $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
-     * @param int          $csPin         GPIO pin (0-31) for CS
-     * @param int          $misoPin       GPIO pin (0-31) for MISO
-     * @param int          $mosiPin       GPIO pin (0-31) for MOSI
-     * @param int          $sclkPin       GPIO pin (0-31) for SCLK
-     * @param int          $flags         Optional flags
-     * @param ErrorHandler $errorHandler
+     * @param Client        $client
+     * @param int           $baudRate      Baud speed (32K-125M, values above 30M are unlikely to work)
+     * @param int           $csPin         GPIO pin (0-31) for CS
+     * @param int           $misoPin       GPIO pin (0-31) for MISO
+     * @param int           $mosiPin       GPIO pin (0-31) for MOSI
+     * @param int           $sclkPin       GPIO pin (0-31) for SCLK
+     * @param SpiFlags|null $flags         Optional flags
+     * @param ErrorHandler  $errorHandler
      */
-    public function __construct(Client $client, int $baudRate, int $csPin, int $misoPin, int $mosiPin, int $sclkPin, int $flags = 0, ErrorHandler $errorHandler = null)
+    public function __construct(Client $client, int $baudRate, int $csPin, int $misoPin, int $mosiPin, int $sclkPin, SpiFlags $flags = null, ErrorHandler $errorHandler = null)
     {
-        parent::__construct($client, $baudRate, $flags, $errorHandler ?: new BitBangingDeviceErrorHandler());
+        parent::__construct($client, $baudRate, $errorHandler ?: new BitBangingDeviceErrorHandler(), $flags);
 
         $this->csPin = $csPin;
         $this->misoPin = $misoPin;
