@@ -24,7 +24,7 @@ If your desired Pigpio feature is not fully supported, you may use [raw requests
 |---------------------------------------------------------------------------------------------------------------|------------------------------------|------------|
 | [Notifications (e.g. GPIO changes)](https://github.com/Volantus/php-pigpio/blob/master/docs/notifications.md) | :heavy_check_mark: Fully supported | 0.1.1      |
 | [Reading PWM signals](https://github.com/Volantus/php-pigpio/blob/master/docs/reading-pwm-signals.md)         | :heavy_check_mark: Fully supported | 0.1.2      |
-| SPI communication                                                                                             | :large_blue_circle: In development | master-dev |
+| [SPI communication](https://github.com/Volantus/php-pigpio/blob/master/docs/spi-communication.md)             | :large_blue_circle: In development | master-dev |
 | [Raw requests/response handling](https://github.com/Volantus/php-pigpio/blob/master/docs/raw-requests.md)     | :heavy_check_mark: Fully supported | 0.1.1      |
 ## Basic usage
 This library is interacting with Pigpio by using sockets. The core communication is handled by the Client class:
