@@ -1,8 +1,8 @@
-#SPI communication
+# SPI communication
 [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus) is an serial bus protocol, which may be used for communication with external devices. 
 
 
-##Setup
+## Setup
 Communication is handled by an child of class SpiDevice. Either [regular](#regular-device) or [bit banging device](#bit-banging-device) might be used.
 ````php
 use Volantus\Pigpio\Client;
@@ -12,7 +12,7 @@ $client = new Client();
 $device = new RegularSpiDevice($client, 0, 32000);
 $device->open();
 ````
-####Cross transferring data
+#### Cross transferring data
 This is the usually the most common used transfer method.
 
 This method transfers a given array of bytes and reads simultaneously the same amount of data (byte count) from the device.
@@ -28,7 +28,7 @@ echo $receivedData[1];
 echo $receivedData[2];
 ````
 
-####Reading data
+#### Reading data
 Reads the given amount of bytes from the device.
 
 ````php
@@ -37,7 +37,7 @@ echo $receivedData[0];
 echo $receivedData[1];
 ````
 
-####Writing data
+#### Writing data
 Writes the given date to the device.
 
 :bangbang: Valid data range:
@@ -47,7 +47,7 @@ Writes the given date to the device.
 $receivedData = $device->write([8, 16, 200]);
 ````
 
-##Device types
+## Device types
 Pigpio supports two different operations modes:
 
 |                                   | Regular device                       | Bit banging device                      |
@@ -59,11 +59,11 @@ Pigpio supports two different operations modes:
 | Max. parallel (slave) SPI devices | 2                                    | > 20 [(GPIO pin count) - 3]             |
 | Max. baud speed                   | 125M (30M)                           | 250k                                    |
 
-###Regular device
+### Regular device
 This communication modes uses the native GPIO SPI pins (GPIO 7 - 11).
 Channel 0 = GPIO08, Channel 1 = GPIO07.
 
-###Bit banging device
+### Bit banging device
 The communication uses any normal GPIO pins.
  
 ## Flags
