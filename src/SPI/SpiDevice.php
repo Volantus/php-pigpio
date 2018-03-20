@@ -50,6 +50,15 @@ abstract class SpiDevice
         $this->errorHandler = $errorHandler;
     }
 
+    public function __destruct()
+    {
+        if ($this->isOpen()) {
+            try {
+                $this->close();
+            } catch (\Throwable $e) {}
+        }
+    }
+
     /**
      * Opens the SPI device (fetches a handle)
      */
