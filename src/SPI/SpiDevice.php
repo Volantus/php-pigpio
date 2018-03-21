@@ -1,6 +1,9 @@
 <?php
 namespace Volantus\Pigpio\SPI;
 
+require_once __DIR__ . '/SpiInterfacePolyfill.php';
+
+use Volantus\BerrySpi\SpiInterface;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Request;
 
@@ -9,7 +12,7 @@ use Volantus\Pigpio\Protocol\Request;
  *
  * @package Volantus\Pigpio\SPI
  */
-abstract class SpiDevice
+abstract class SpiDevice implements SpiInterface
 {
     /**
      * @var Client
@@ -159,7 +162,7 @@ abstract class SpiDevice
     /**
      * @return int
      */
-    public function getBaudRate(): int
+    public function getSpeed(): int
     {
         return $this->baudRate;
     }
@@ -170,5 +173,31 @@ abstract class SpiDevice
     public function getFlags(): int
     {
         return $this->flags;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return array
+     */
+    public function transfer(array $data): array
+    {
+        return $this->crossTransfer($data);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function initialize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isInitialized(): bool
+    {
+        return true;
     }
 }

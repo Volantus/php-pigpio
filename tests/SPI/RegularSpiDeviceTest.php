@@ -3,6 +3,7 @@ namespace Volantus\Pigpio\Tests\SPI;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Volantus\BerrySpi\SpiInterface;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\Commands;
 use Volantus\Pigpio\Protocol\DefaultRequest;
@@ -539,5 +540,10 @@ class RegularSpiDeviceTest extends TestCase
 
         $this->device->open();
         $this->device->crossTransfer([32]);
+    }
+
+    public function test_implementsInterface()
+    {
+        self::assertInstanceOf(SpiInterface::class, $this->device);
     }
 }
