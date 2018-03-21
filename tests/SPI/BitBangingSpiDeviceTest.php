@@ -33,12 +33,12 @@ class BitBangingSpiDeviceTest extends TestCase
     protected function setUp()
     {
         $this->client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
-        $this->device = new BitBangingSpiDevice($this->client, 32000, 6, 8, 21, 22, new SpiFlags(['notReserved' => [0]]));
+        $this->device = new BitBangingSpiDevice($this->client, 6, 8, 21, 22, 32000, new SpiFlags(['notReserved' => [0]]));
     }
 
     public function test_constructor_flagsNull()
     {
-        $this->device = new BitBangingSpiDevice($this->client, 32000, 6, 8, 21, 22, null);
+        $this->device = new BitBangingSpiDevice($this->client, 6, 8, 21, 22, 32000, null);
 
         $this->client->expects(self::once())
             ->method('sendRaw')
