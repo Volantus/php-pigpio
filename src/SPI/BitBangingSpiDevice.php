@@ -9,11 +9,11 @@ use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\Request;
 
 /**
- * Class BitBaningSpiDevice
+ * Class BitBangingSpiDevice
  *
  * @package Volantus\Pigpio\SPI
  */
-class BitBaningSpiDevice extends SpiDevice
+class BitBangingSpiDevice extends SpiDevice
 {
     const PI_BAD_SPI_BAUD  = -141;
     const PI_BAD_USER_GPIO = -2;

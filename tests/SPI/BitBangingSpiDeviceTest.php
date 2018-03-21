@@ -10,8 +10,7 @@ use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\ExtensionRequest;
 use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\Response;
-use Volantus\Pigpio\SPI\BitBaningSpiDevice;
-use Volantus\Pigpio\SPI\RegularSpiDevice;
+use Volantus\Pigpio\SPI\BitBangingSpiDevice;
 use Volantus\Pigpio\SPI\SpiFlags;
 
 /**
@@ -27,19 +26,19 @@ class BitBangingSpiDeviceTest extends TestCase
     private $client;
 
     /**
-     * @var RegularSpiDevice
+     * @var BitBangingSpiDevice
      */
     private $device;
 
     protected function setUp()
     {
         $this->client = $this->getMockBuilder(Client::class)->disableOriginalConstructor()->getMock();
-        $this->device = new BitBaningSpiDevice($this->client, 32000, 6, 8, 21, 22, new SpiFlags(['notReserved' => [0]]));
+        $this->device = new BitBangingSpiDevice($this->client, 32000, 6, 8, 21, 22, new SpiFlags(['notReserved' => [0]]));
     }
 
     public function test_constructor_flagsNull()
     {
-        $this->device = new BitBaningSpiDevice($this->client, 32000, 6, 8, 21, 22, null);
+        $this->device = new BitBangingSpiDevice($this->client, 32000, 6, 8, 21, 22, null);
 
         $this->client->expects(self::once())
             ->method('sendRaw')
@@ -78,11 +77,11 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_open_badGpioPin()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_USER_GPIO);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_BAD_USER_GPIO);
 
         $this->client->expects(self::once())
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_USER_GPIO));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_BAD_USER_GPIO));
 
         $this->device->open();
     }
@@ -93,11 +92,11 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_open_gpioAlreadyInUse()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_GPIO_IN_USE);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_GPIO_IN_USE);
 
         $this->client->expects(self::once())
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_GPIO_IN_USE));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_GPIO_IN_USE));
 
         $this->device->open();
     }
@@ -108,11 +107,11 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_open_badBaudRate()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_SPI_BAUD);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_BAD_SPI_BAUD);
 
         $this->client->expects(self::once())
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_SPI_BAUD));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_BAD_SPI_BAUD));
 
         $this->device->open();
     }
@@ -171,7 +170,7 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_close_badGpioPin()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_USER_GPIO);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_BAD_USER_GPIO);
 
         $this->client->expects(self::at(0))
             ->method('sendRaw')
@@ -179,7 +178,7 @@ class BitBangingSpiDeviceTest extends TestCase
 
         $this->client->expects(self::at(1))
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_USER_GPIO));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_BAD_USER_GPIO));
 
         $this->device->open();
         $this->device->close();
@@ -191,7 +190,7 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_close_noSpiInProgress()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_NOT_SPI_GPIO);
 
         $this->client->expects(self::at(0))
             ->method('sendRaw')
@@ -199,7 +198,7 @@ class BitBangingSpiDeviceTest extends TestCase
 
         $this->client->expects(self::at(1))
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_NOT_SPI_GPIO));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_NOT_SPI_GPIO));
 
         $this->device->open();
         $this->device->close();
@@ -257,7 +256,7 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_crossTransfer_badGpioPin()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_BAD_USER_GPIO);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_BAD_USER_GPIO);
 
         $this->client->expects(self::at(0))
             ->method('sendRaw')
@@ -265,7 +264,7 @@ class BitBangingSpiDeviceTest extends TestCase
 
         $this->client->expects(self::at(1))
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_BAD_USER_GPIO));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_BAD_USER_GPIO));
 
         $this->device->open();
         $this->device->crossTransfer([32]);
@@ -277,7 +276,7 @@ class BitBangingSpiDeviceTest extends TestCase
      */
     public function test_crossTransfer_noSpiInProgress()
     {
-        $this->expectExceptionCode(BitBaningSpiDevice::PI_NOT_SPI_GPIO);
+        $this->expectExceptionCode(BitBangingSpiDevice::PI_NOT_SPI_GPIO);
 
         $this->client->expects(self::at(0))
             ->method('sendRaw')
@@ -285,7 +284,7 @@ class BitBangingSpiDeviceTest extends TestCase
 
         $this->client->expects(self::at(1))
             ->method('sendRaw')
-            ->willReturn(new Response(BitBaningSpiDevice::PI_NOT_SPI_GPIO));
+            ->willReturn(new Response(BitBangingSpiDevice::PI_NOT_SPI_GPIO));
 
         $this->device->open();
         $this->device->crossTransfer([32]);
