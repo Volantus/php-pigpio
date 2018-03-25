@@ -47,7 +47,7 @@ class Socket
      */
     public function listen(int $timeout = 0) : string
     {
-        socket_set_timeout($this->connection, 0, $timeout);
+        socket_set_option($this->connection, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 0, 'usec' => $timeout]);
 
         $fullData = socket_read($this->connection, 64);
         // Checking for more data
