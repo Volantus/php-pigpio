@@ -7,6 +7,7 @@ use Volantus\Pigpio\Network\Socket;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\DefaultRequest;
 use Volantus\Pigpio\Protocol\DefaultResponseStructure;
+use Volantus\Pigpio\Protocol\ExtensionResponseStructure;
 use Volantus\Pigpio\Protocol\IncompleteDataException;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\Protocol\ResponseStructure;
@@ -34,7 +35,7 @@ class ClientTest extends TestCase
         $this->service = new Client($this->socket);
     }
 
-    public function test_sendRaw_correct()
+    public function test_sendRaw_correct_defaultRequest()
     {
         $expectedResponse = new Response(0, null);
 
@@ -53,6 +54,31 @@ class ClientTest extends TestCase
         $this->socket->expects(self::once())
             ->method('listen')
             ->willReturn('ABCDEFGHIJKLMNOP');
+
+        $result = $this->service->sendRaw($request);
+
+        self::assertSame($result, $expectedResponse);
+    }
+
+    public function test_sendRaw_correct_extensionRequest()
+    {
+        $expectedResponse = new Response(0, ['Q', 'R']);
+
+        $responseStructure = $this->getMockBuilder(ExtensionResponseStructure::class)->disableOriginalConstructor()->getMock();
+        $responseStructure->expects(self::once())
+            ->method('decode')
+            ->with(self::equalTo('ABCDEFGHIJKLMNOPQR'))
+            ->willReturn($expectedResponse);
+
+        $request = new DefaultRequest(8, 21, 1500, $responseStructure);
+
+        $this->socket->expects(self::once())
+            ->method('send')
+            ->with(self::equalTo($request->encode()));
+
+        $this->socket->expects(self::once())
+            ->method('listen')
+            ->willReturn('ABCDEFGHIJKLMNOPQR');
 
         $result = $this->service->sendRaw($request);
 
