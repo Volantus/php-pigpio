@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Volantus\Pigpio\Network\Socket;
 use Volantus\Pigpio\Client;
 use Volantus\Pigpio\Protocol\DefaultRequest;
+use Volantus\Pigpio\Protocol\DefaultResponseStructure;
 use Volantus\Pigpio\Protocol\IncompleteDataException;
 use Volantus\Pigpio\Protocol\Response;
 use Volantus\Pigpio\Protocol\ResponseStructure;
@@ -127,5 +128,50 @@ class ClientTest extends TestCase
         $result = $this->service->sendRaw($request);
 
         self::assertSame($result, $expectedResponse);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\Protocol\TimeoutException
+     * @expectedExceptionMessage Daemon did not respond within specified timeout (50000 µs)
+     */
+    public function test_sendRaw_timeoutOccurredOnSocketLevel()
+    {
+        $this->socket->expects(self::once())
+            ->method('listen')
+            ->willReturn('');
+
+        $request = new DefaultRequest(8, 21, 1500, new DefaultResponseStructure(), 50000);
+        $this->service->sendRaw($request);
+    }
+
+    public function test_sendRaw_correctTimeoutCalculated()
+    {
+        $this->socket->expects(self::at(1))
+            ->method('listen')
+            ->will(self::returnCallback(function () {
+                usleep(10000);
+                return 'ABCDEFGHIJKLMN';
+            }));
+
+        $this->socket->expects(self::at(2))
+            ->method('listen')
+            ->will(self::returnCallback(function (int $timeout) {
+                self::assertGreaterThan(80000, $timeout);
+                self::assertLessThan(90000, $timeout);
+                return 'OP';
+            }));
+
+        $request = new DefaultRequest(8, 21, 1500, new DefaultResponseStructure(), 100000);
+        $this->service->sendRaw($request);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\Protocol\TimeoutException
+     * @expectedExceptionMessage Daemon did not respond within specified timeout (1 µs)
+     */
+    public function test_sendRaw_calculatedTimeoutLessThenZero()
+    {
+        $request = new DefaultRequest(8, 21, 1500, new DefaultResponseStructure(), 1);
+        $this->service->sendRaw($request);
     }
 }

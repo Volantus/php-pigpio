@@ -22,4 +22,11 @@ interface Request
      * @return int
      */
     public function getCommand(): int;
+
+    /**
+     * Timeout in microseconds for the response
+     *
+     * @return int
+     */
+    public function getTimeout(): int;
 }

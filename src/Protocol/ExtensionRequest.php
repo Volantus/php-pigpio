@@ -50,16 +50,22 @@ class ExtensionRequest implements Request
     private $extension;
 
     /**
+     * @var int
+     */
+    private $timeout;
+
+    /**
      * ExtensionRequest constructor.
      *
-     * @param int                    $command            Command (0 - 177)
-     * @param int                    $p1                 First parameter - Unsigned integer (32 bit)
-     * @param int                    $p2                 Second parameter - Unsigned integer (32 bit)
-     * @param string                 $extensionFormat    Packing format of the extension
-     * @param array                  $extension          Extension data (needs to match with packing format)
-     * @param ResponseStructure      $responseStructure  Structure of the expected response
+     * @param int               $command           Command (0 - 177)
+     * @param int               $p1                First parameter - Unsigned integer (32 bit)
+     * @param int               $p2                Second parameter - Unsigned integer (32 bit)
+     * @param string            $extensionFormat   Packing format of the extension
+     * @param array             $extension         Extension data (needs to match with packing format)
+     * @param ResponseStructure $responseStructure Structure of the expected response
+     * @param int               $timeout           Timeout in seconds for the response
      */
-    public function __construct(int $command, int $p1, int $p2, string $extensionFormat, array $extension, ResponseStructure $responseStructure = null)
+    public function __construct(int $command, int $p1, int $p2, string $extensionFormat, array $extension, ResponseStructure $responseStructure = null, int $timeout = 100000)
     {
         $this->command = $command;
         $this->p1 = $p1;
@@ -67,6 +73,7 @@ class ExtensionRequest implements Request
         $this->extensionFormat = $extensionFormat;
         $this->extension = $extension;
         $this->responseStructure = $responseStructure ?: new DefaultResponseStructure();
+        $this->timeout = $timeout;
     }
 
     /**
@@ -105,5 +112,13 @@ class ExtensionRequest implements Request
     public function getCommand(): int
     {
         return $this->command;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
     }
 }

@@ -39,10 +39,16 @@ class Socket
     }
 
     /**
+     * @param int $timeout
+     *
      * @return string
+     * @internal param bool $blocking
+     *
      */
-    public function listen() : string
+    public function listen(int $timeout = 0) : string
     {
+        socket_set_timeout($this->connection, 0, $timeout);
+
         $fullData = socket_read($this->connection, 64);
         // Checking for more data
         socket_set_nonblock($this->connection);

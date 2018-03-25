@@ -36,19 +36,26 @@ class DefaultRequest implements Request
     private $responseStructure;
 
     /**
+     * @var int
+     */
+    private $timeout;
+
+    /**
      * NormalRequest constructor.
      *
-     * @param int                    $command            Command (0 - 177)
-     * @param int                    $p1                 First parameter - Unsigned integer (32 bit)
-     * @param int                    $p2                 Second parameter - Unsigned integer (32 bit)
-     * @param ResponseStructure      $responseStructure  Structure of the expected response
+     * @param int               $command           Command (0 - 177)
+     * @param int               $p1                First parameter - Unsigned integer (32 bit)
+     * @param int               $p2                Second parameter - Unsigned integer (32 bit)
+     * @param ResponseStructure $responseStructure Structure of the expected response
+     * @param int               $timeout           Timeout in microseconds for the response
      */
-    public function __construct(int $command, int $p1, int $p2, ResponseStructure $responseStructure = null)
+    public function __construct(int $command, int $p1, int $p2, ResponseStructure $responseStructure = null, int $timeout = 100000)
     {
         $this->command = $command;
         $this->p1 = $p1;
         $this->p2 = $p2;
         $this->responseStructure = $responseStructure ?: new DefaultResponseStructure();
+        $this->timeout = $timeout;
     }
 
     /**
@@ -89,5 +96,13 @@ class DefaultRequest implements Request
     public function getP2(): int
     {
         return $this->p2;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
     }
 }
