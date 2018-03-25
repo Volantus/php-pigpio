@@ -45,6 +45,7 @@ class Client
      */
     public function sendRaw(Request $request): Response
     {
+        $this->socket->clear();
         $this->socket->send($request->encode());
         $this->requestStarted = microtime(true);
 

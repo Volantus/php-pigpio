@@ -63,4 +63,14 @@ class Socket
     {
         socket_close($this->connection);
     }
+
+    /**
+     * Clears all data currently in queue
+     */
+    public function clear()
+    {
+        socket_set_nonblock($this->connection);
+        socket_read($this->connection, 65536);
+        socket_set_block($this->connection);
+    }
 }

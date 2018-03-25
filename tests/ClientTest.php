@@ -71,15 +71,15 @@ class ClientTest extends TestCase
 
         $request = new DefaultRequest(8, 21, 1500, $responseStructure);
 
-        $this->socket->expects(self::at(0))
+        $this->socket->expects(self::at(1))
             ->method('send')
             ->with(self::equalTo($request->encode()));
 
-        $this->socket->expects(self::at(1))
+        $this->socket->expects(self::at(2))
             ->method('listen')
             ->willReturn('ABCDEFGHIJKLMN');
 
-        $this->socket->expects(self::at(2))
+        $this->socket->expects(self::at(3))
             ->method('listen')
             ->willReturn('OP');
 
@@ -105,23 +105,23 @@ class ClientTest extends TestCase
 
         $request = new DefaultRequest(8, 21, 1500, $responseStructure);
 
-        $this->socket->expects(self::at(0))
+        $this->socket->expects(self::at(1))
             ->method('send')
             ->with(self::equalTo($request->encode()));
 
-        $this->socket->expects(self::at(1))
+        $this->socket->expects(self::at(2))
             ->method('listen')
             ->willReturn('ABCDEFGHIJKLMN');
 
-        $this->socket->expects(self::at(2))
+        $this->socket->expects(self::at(3))
             ->method('listen')
             ->willReturn('OP');
 
-        $this->socket->expects(self::at(3))
+        $this->socket->expects(self::at(4))
             ->method('listen')
             ->willReturn('QR');
 
-        $this->socket->expects(self::at(4))
+        $this->socket->expects(self::at(5))
             ->method('listen')
             ->willReturn('ST');
 
@@ -146,14 +146,14 @@ class ClientTest extends TestCase
 
     public function test_sendRaw_correctTimeoutCalculated()
     {
-        $this->socket->expects(self::at(1))
+        $this->socket->expects(self::at(2))
             ->method('listen')
             ->will(self::returnCallback(function () {
                 usleep(10000);
                 return 'ABCDEFGHIJKLMN';
             }));
 
-        $this->socket->expects(self::at(2))
+        $this->socket->expects(self::at(3))
             ->method('listen')
             ->will(self::returnCallback(function (int $timeout) {
                 self::assertGreaterThan(80000, $timeout);
@@ -173,5 +173,17 @@ class ClientTest extends TestCase
     {
         $request = new DefaultRequest(8, 21, 1500, new DefaultResponseStructure(), 1);
         $this->service->sendRaw($request);
+    }
+
+    public function test_sendRaw_socketClearedBeforeSendingData()
+    {
+        $this->socket->expects(self::at(0))
+            ->method('clear');
+
+        $this->socket->expects(self::once())
+            ->method('listen')
+            ->willReturn('ABCDEFGHIJKLMNOP');
+
+        $this->service->sendRaw(new DefaultRequest(8, 21, 1500));
     }
 }
