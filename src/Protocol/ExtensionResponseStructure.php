@@ -35,7 +35,7 @@ class ExtensionResponseStructure implements ResponseStructure
         $extensionSize = $baseData['res'];
         $fullSize = $extensionSize + Response::BASE_SIZE;
 
-        if (strlen($data) != $fullSize) {
+        if (strlen($data) < $fullSize) {
             throw new IncompleteDataException("Received data is incomplete => expected $fullSize bytes, but got " . strlen($data), $fullSize);
         }
 

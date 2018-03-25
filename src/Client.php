@@ -75,7 +75,7 @@ class Client
         }
         $data = $previousData . $data;
 
-        if (strlen($data) != $size) {
+        if (strlen($data) < $size) {
             usleep(self::SLEEP_TIME);
             return $this->receiveData($timeout, $size, $data);
         }
