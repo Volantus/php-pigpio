@@ -8,6 +8,8 @@ namespace Volantus\Pigpio\Protocol;
  */
 class Response
 {
+    const BASE_SIZE = 16;
+
     /**
      * Signed 32 bit integer
      *

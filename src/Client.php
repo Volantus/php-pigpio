@@ -2,6 +2,7 @@
 namespace Volantus\Pigpio;
 
 use Volantus\Pigpio\Network\Socket;
+use Volantus\Pigpio\Protocol\IncompleteDataException;
 use Volantus\Pigpio\Protocol\Request;
 use Volantus\Pigpio\Protocol\Response;
 
@@ -36,7 +37,29 @@ class Client
     {
         $this->socket->send($request->encode());
 
-        $responseData = $this->socket->listen();
-        return $request->getResponseStructure()->decode($responseData);
+        $responseData = $this->receiveData(Response::BASE_SIZE);
+        try {
+            return $request->getResponseStructure()->decode($responseData);
+        } catch (IncompleteDataException $e) {
+            $responseData = $this->receiveData($e->getExpectedSize(), $responseData);
+            return $request->getResponseStructure()->decode($responseData);
+        }
+    }
+
+    /**
+     * @param int    $size          In bytes
+     * @param string $previousData  New data will be appended
+     *
+     * @return string
+     */
+    private function receiveData(int $size, string $previousData = ''): string
+    {
+        $data = $previousData . $this->socket->listen();
+        if (strlen($data) != $size) {
+            usleep(2000);
+            return $this->receiveData($size, $data);
+        }
+
+        return $data;
     }
 }
