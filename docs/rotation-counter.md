@@ -1,4 +1,4 @@
-# Reading PWM signals
+# Rotation speed with hall sensors
 php-pigpio supports measuring rotation speed of hall sensors like A3144, OH3144, AH3144E, TO-92U, etc. This feature is based on [notifications](https://github.com/Volantus/php-pigpio/blob/master/docs/notifications.md).
 
 ## Setup
