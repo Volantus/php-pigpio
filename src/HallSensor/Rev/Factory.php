@@ -18,7 +18,7 @@ abstract class Factory
      *
      * @return RevolutionCounter
      */
-    public function create($address = '127.0.0.1', $port = Client::DEFAULT_PIGPIO_PORT): RevolutionCounter
+    public static function create($address = '127.0.0.1', $port = Client::DEFAULT_PIGPIO_PORT): RevolutionCounter
     {
         $client = new Client(new Socket($address, $port));
         $notifier = new Notifier($client);
