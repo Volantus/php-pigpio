@@ -15,6 +15,7 @@ use Volantus\Pigpio\Protocol\TimeoutException;
 class Client
 {
     const SLEEP_TIME = 2000;
+    const DEFAULT_PIGPIO_PORT = 8888;
 
     /**
      * @var Socket
@@ -33,7 +34,7 @@ class Client
      */
     public function __construct(Socket $socket = null)
     {
-        $this->socket = $socket ?: new Socket('127.0.0.1', 8888);
+        $this->socket = $socket ?: new Socket('127.0.0.1', self::DEFAULT_PIGPIO_PORT);
     }
 
     /**

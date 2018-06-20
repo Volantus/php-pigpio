@@ -88,26 +88,11 @@ class PwmReceiver
 
         if (!$status->isHigh() && isset($this->lastHigh[$status->getPin()])) {
             $lastHigh = $this->lastHigh[$status->getPin()];
-            $pulseWidth = $this->calcPulseWidth($lastHigh, $event->getTicks());
+            $pulseWidth = GpioEvent::calculateTicksDelta($lastHigh, $event->getTicks());
             $signal = new PwmSignal($status->getPin(), $pulseWidth);
 
             call_user_func($this->callback, $signal);
             unset($this->lastHigh[$status->getPin()]);
         }
-    }
-
-    /**
-     * @param int $start
-     * @param int $end
-     *
-     * @return int
-     */
-    private function calcPulseWidth(int $start, int $end): int
-    {
-        if ($end < 0 && $start > 0) {
-            return (static::MAX_32_BIT_INT - $start) + (static::MAX_32_BIT_INT - abs($end));
-        }
-
-        return $end - $start;
     }
 }
