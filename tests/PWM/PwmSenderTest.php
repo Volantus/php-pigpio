@@ -320,4 +320,43 @@ class PwmSenderTest extends TestCase
 
         $this->sender->getPulseWidth(14);
     }
+
+    public function test_getRange_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRG, 14, 0)))
+            ->willReturn(new Response(255));
+
+        $result = $this->sender->getRange(14);
+        self::assertEquals(255, $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PRG command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_getRange_badGpioPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRG, 50, 0)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->getRange(50);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PRG command failed with status code -99
+     */
+    public function test_getRange_unknownError()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRG, 14, 0)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->getRange(14);
+    }
 }

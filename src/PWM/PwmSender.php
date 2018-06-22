@@ -168,4 +168,29 @@ class PwmSender
 
         return $response->getResponse();
     }
+
+    /**
+     * Returns the dutycycle range used for the GPIO
+     *
+     * @param int $gpioPin GPIO pin (0-31)
+     *
+     * @return int
+     * @throws CommandFailedException
+     */
+    public function getRange(int $gpioPin): int
+    {
+        $request = new DefaultRequest(Commands::PRG, $gpioPin, 0);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('PRG command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('PRG command failed with status code ' . $response->getResponse());
+            }
+        }
+
+        return $response->getResponse();
+    }
 }
