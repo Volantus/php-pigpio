@@ -17,6 +17,7 @@ class PwmSender
     const PI_BAD_DUTYCYCLE  = -8;
     const PI_BAD_DUTYRANGE  = -21;
     const PI_NOT_PERMITTED  = -41;
+    const PI_NOT_SERVO_GPIO = -93;
 
     /**
      * @var Client
@@ -139,5 +140,32 @@ class PwmSender
                     throw new CommandFailedException('PFS command failed with status code ' . $response->getResponse());
             }
         }
+    }
+
+    /**
+     * Return the servo pulsewidth in use on a GPIO.
+     *
+     * @param int $gpioPin GPIO pin (0-31)
+     *
+     * @return int Pulse width in microseconds
+     * @throws CommandFailedException
+     */
+    public function getPulseWidth(int $gpioPin): int
+    {
+        $request = new DefaultRequest(Commands::GPW, $gpioPin, 0);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('GPW command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_NOT_SERVO_GPIO:
+                    throw new CommandFailedException('GPW command failed => GPIO is not in use for servo pulses (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('GPW command failed with status code ' . $response->getResponse());
+            }
+        }
+
+        return $response->getResponse();
     }
 }

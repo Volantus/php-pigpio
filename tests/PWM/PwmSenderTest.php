@@ -267,4 +267,57 @@ class PwmSenderTest extends TestCase
 
         $this->sender->setFrequency(14, 250);
     }
+
+    public function test_getPulseWidth_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GPW, 14, 0)))
+            ->willReturn(new Response(1600));
+
+        $result = $this->sender->getPulseWidth(14);
+        self::assertEquals(1600, $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GPW command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_getPulseWidth_badGpioPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GPW, 50, 0)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->getPulseWidth(50);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GPW command failed => GPIO is not in use for servo pulses (status code -93)
+     */
+    public function test_getPulseWidth_notInUse()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GPW, 14, 0)))
+            ->willReturn(new Response(PwmSender::PI_NOT_SERVO_GPIO));
+
+        $this->sender->getPulseWidth(14);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GPW command failed with status code -99
+     */
+    public function test_getPulseWidth_unknownError()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GPW, 14, 0)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->getPulseWidth(14);
+    }
 }
