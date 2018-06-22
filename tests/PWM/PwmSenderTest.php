@@ -44,6 +44,48 @@ class PwmSenderTest extends TestCase
 
     /**
      * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage SERVO command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_setPulseWidth_badGpiPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::SERVO, 50, 1500)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->setPulseWidth(50, 1500);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage SERVO command failed => given pulse width is out of valid range (status code -7)
+     */
+    public function test_setPulseWidth_badPulseWidth()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::SERVO, 14, -1)))
+            ->willReturn(new Response(PwmSender::PI_BAD_PULSEWIDTH));
+
+        $this->sender->setPulseWidth(14, -1);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage SERVO command failed => operation was not permitted (status code -41)
+     */
+    public function test_setPulseWidth_notPermitted()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::SERVO, 14, 1500)))
+            ->willReturn(new Response(PwmSender::PI_NOT_PERMITTED));
+
+        $this->sender->setPulseWidth(14, 1500);
+    }
+    
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
      * @expectedExceptionMessage SERVO command failed with status code -3
      */
     public function test_setPulseWidth_unknown_failure()

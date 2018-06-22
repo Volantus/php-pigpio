@@ -12,9 +12,10 @@ use Volantus\Pigpio\Protocol\DefaultRequest;
  */
 class PwmSender
 {
-    const PI_BAD_USER_GPIO = -2;
-    const PI_BAD_DUTYCYCLE = -8;
-    const PI_NOT_PERMITTED = -41;
+    const PI_BAD_USER_GPIO  = -2;
+    const PI_BAD_PULSEWIDTH = -7;
+    const PI_BAD_DUTYCYCLE  = -8;
+    const PI_NOT_PERMITTED  = -41;
 
     /**
      * @var Client
@@ -45,7 +46,16 @@ class PwmSender
         $response = $this->client->sendRaw($request);
 
         if (!$response->isSuccessful()) {
-            throw new CommandFailedException('SERVO command failed with status code ' . $response->getResponse());
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('SERVO command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_BAD_PULSEWIDTH:
+                    throw new CommandFailedException('SERVO command failed => given pulse width is out of valid range (status code ' . $response->getResponse() . ')');
+                case self::PI_NOT_PERMITTED:
+                    throw new CommandFailedException('SERVO command failed => operation was not permitted (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('SERVO command failed with status code ' . $response->getResponse());
+            }
         }
     }
 
