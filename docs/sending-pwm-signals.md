@@ -20,6 +20,7 @@ $sender->setPulseWidth(14, 1500);
 ### Setting duty cycle
 Duty cycle is controlled by setting a integer value out of a valid range.
 Default range: 255
+
 The range may be modified by using  `$sender->setRange()` method.
 
 Example: Setting duty cycle to 150 out of 255 => ~59% on GPIO pin 14:
