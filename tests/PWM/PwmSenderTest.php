@@ -163,4 +163,56 @@ class PwmSenderTest extends TestCase
 
         $this->sender->setDutyCycle(14, 1700);
     }
+
+    public function test_setRange_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRS, 14, 1024)))
+            ->willReturn(new Response(0));
+
+        $this->sender->setRange(14, 1024);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PRS command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_setRange_badGpiPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRS, 50, 1024)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->setRange(50, 1024);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PRS command failed => given range is not valid (status code -21)
+     */
+    public function test_setRange_badRange()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRS, 14, -1)))
+            ->willReturn(new Response(PwmSender::PI_BAD_DUTYRANGE));
+
+        $this->sender->setRange(14, -1);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PRS command failed with status code -99
+     */
+    public function test_setRange_unknownFailure()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PRS, 14, 1024)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->setRange(14, 1024);
+    }
 }

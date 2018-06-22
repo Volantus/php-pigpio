@@ -15,6 +15,7 @@ class PwmSender
     const PI_BAD_USER_GPIO  = -2;
     const PI_BAD_PULSEWIDTH = -7;
     const PI_BAD_DUTYCYCLE  = -8;
+    const PI_BAD_DUTYRANGE  = -21;
     const PI_NOT_PERMITTED  = -41;
 
     /**
@@ -83,6 +84,32 @@ class PwmSender
                     throw new CommandFailedException('PWM command failed => operation was not permitted (status code ' . $response->getResponse() . ')');
                 default:
                     throw new CommandFailedException('PWM command failed with status code ' . $response->getResponse());
+            }
+        }
+    }
+
+    /**
+     * Sets the "sampling" range
+     * The real range internally used depends on the frequency
+     *
+     * @param int $gpioPin GPIO pin (0-31)
+     * @param int $range   25-40000
+     *
+     * @throws CommandFailedException
+     */
+    public function setRange(int $gpioPin, int $range)
+    {
+        $request = new DefaultRequest(Commands::PRS, $gpioPin, $range);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('PRS command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_BAD_DUTYRANGE:
+                    throw new CommandFailedException('PRS command failed => given range is not valid (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('PRS command failed with status code ' . $response->getResponse());
             }
         }
     }
