@@ -17,6 +17,7 @@ class PwmSender
     const PI_BAD_DUTYCYCLE  = -8;
     const PI_BAD_DUTYRANGE  = -21;
     const PI_NOT_PERMITTED  = -41;
+    const PI_NOT_PWM_GPIO   = -92;
     const PI_NOT_SERVO_GPIO = -93;
 
     /**
@@ -188,6 +189,33 @@ class PwmSender
                     throw new CommandFailedException('PRG command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
                 default:
                     throw new CommandFailedException('PRG command failed with status code ' . $response->getResponse());
+            }
+        }
+
+        return $response->getResponse();
+    }
+
+    /**
+     * Return the PWM dutycycle in use on a GPIO.
+     *
+     * @param int $gpioPin GPIO pin (0-31)
+     *
+     * @return int
+     * @throws CommandFailedException
+     */
+    public function getDutyCycle(int $gpioPin): int
+    {
+        $request = new DefaultRequest(Commands::GDC, $gpioPin, 0);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('GDC command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_NOT_PWM_GPIO:
+                    throw new CommandFailedException('GDC command failed => GPIO is not in use for PWM (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('GDC command failed with status code ' . $response->getResponse());
             }
         }
 

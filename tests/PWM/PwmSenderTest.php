@@ -359,4 +359,57 @@ class PwmSenderTest extends TestCase
 
         $this->sender->getRange(14);
     }
+
+    public function test_getDutyCycle_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GDC, 14, 0)))
+            ->willReturn(new Response(150));
+
+        $result = $this->sender->getDutyCycle(14);
+        self::assertEquals(150, $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GDC command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_getDutyCycle_badGpioPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GDC, 50, 0)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->getDutyCycle(50);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GDC command failed => GPIO is not in use for PWM (status code -92)
+     */
+    public function test_getDutyCycle_notInUse()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GDC, 14, 0)))
+            ->willReturn(new Response(PwmSender::PI_NOT_PWM_GPIO));
+
+        $this->sender->getDutyCycle(14);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage GDC command failed with status code -99
+     */
+    public function test_getDutyCycle_unknownError()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::GDC, 14, 0)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->getDutyCycle(14);
+    }
 }
