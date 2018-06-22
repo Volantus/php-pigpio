@@ -113,4 +113,31 @@ class PwmSender
             }
         }
     }
+
+    /**
+     * Set the frequency (in Hz) of the PWM to be used on the GPIO.
+     *
+     * @param int $gpioPin    GPIO pin (0-31)
+     * @param int $frequency  >=0 Hz
+     *                        The selectable frequencies depend upon the sample rate (follow link for details)
+     *
+     * @throws CommandFailedException
+     * @see http://abyz.me.uk/rpi/pigpio/pdif2.html#set_PWM_frequency
+     */
+    public function setFrequency(int $gpioPin, int $frequency)
+    {
+        $request = new DefaultRequest(Commands::PFS, $gpioPin, $frequency);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('PFS command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_NOT_PERMITTED:
+                    throw new CommandFailedException('PFS command failed => operation was not permitted (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('PFS command failed with status code ' . $response->getResponse());
+            }
+        }
+    }
 }

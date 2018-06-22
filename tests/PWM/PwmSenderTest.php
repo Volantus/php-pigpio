@@ -215,4 +215,56 @@ class PwmSenderTest extends TestCase
 
         $this->sender->setRange(14, 1024);
     }
+
+    public function test_setFrequency_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFS, 14, 250)))
+            ->willReturn(new Response(0));
+
+        $this->sender->setFrequency(14, 250);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PFS command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_setFrequency_badGpiPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFS, 50, 250)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->setFrequency(50, 250);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PFS command failed => operation was not permitted (status code -41)
+     */
+    public function test_setFrequency_notPermitted()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFS, 14, 250)))
+            ->willReturn(new Response(PwmSender::PI_NOT_PERMITTED));
+
+        $this->sender->setFrequency(14, 250);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PFS command failed with status code -99
+     */
+    public function test_setFrequency_unknownFailure()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFS, 14, 250)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->setFrequency(14, 250);
+    }
 }
