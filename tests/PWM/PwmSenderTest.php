@@ -412,4 +412,43 @@ class PwmSenderTest extends TestCase
 
         $this->sender->getDutyCycle(14);
     }
+
+    public function test_getFrequency_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFG, 14, 0)))
+            ->willReturn(new Response(250));
+
+        $result = $this->sender->getFrequency(14);
+        self::assertEquals(250, $result);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PFG command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_getFrequency_badGpioPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFG, 50, 0)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->getFrequency(50);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PFG command failed with status code -99
+     */
+    public function test_getFrequency_unknownError()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PFG, 14, 0)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->getFrequency(14);
+    }
 }

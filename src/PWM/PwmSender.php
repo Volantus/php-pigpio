@@ -221,4 +221,29 @@ class PwmSender
 
         return $response->getResponse();
     }
+
+    /**
+     * Get the frequency of PWM being used on the GPIO.
+     *
+     * @param int $gpioPin GPIO pin (0-31)
+     *
+     * @return int Frequency in hertz
+     * @throws CommandFailedException
+     */
+    public function getFrequency(int $gpioPin): int
+    {
+        $request = new DefaultRequest(Commands::PFG, $gpioPin, 0);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('PFG command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('PFG command failed with status code ' . $response->getResponse());
+            }
+        }
+
+        return $response->getResponse();
+    }
 }
