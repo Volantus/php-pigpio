@@ -46,7 +46,7 @@ class PwmSenderTest extends TestCase
      * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
      * @expectedExceptionMessage SERVO command failed with status code -3
      */
-    public function test_setPulseWidth_failure()
+    public function test_setPulseWidth_unknown_failure()
     {
         $this->client->expects(self::once())
             ->method('sendRaw')
@@ -54,5 +54,71 @@ class PwmSenderTest extends TestCase
             ->willReturn(new Response(-3));
 
         $this->sender->setPulseWidth(14, 1700);
+    }
+
+    public function test_setDutyCycle_correctRequest()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PWM, 14, 150)))
+            ->willReturn(new Response(0));
+
+        $this->sender->setDutyCycle(14, 150);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PWM command failed => bad GPIO pin given (status code -2)
+     */
+    public function test_setDutyCycle_badGpiPin()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PWM, 50, 150)))
+            ->willReturn(new Response(PwmSender::PI_BAD_USER_GPIO));
+
+        $this->sender->setDutyCycle(50, 150);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PWM command failed => given dutycycle is out of valid range (status code -8)
+     */
+    public function test_setDutyCycle_badDutyCycle()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PWM, 14, -1)))
+            ->willReturn(new Response(PwmSender::PI_BAD_DUTYCYCLE));
+
+        $this->sender->setDutyCycle(14, -1);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PWM command failed => operation was not permitted (status code -41)
+     */
+    public function test_setDutyCycle_notPermitted()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PWM, 14, 170)))
+            ->willReturn(new Response(PwmSender::PI_NOT_PERMITTED));
+
+        $this->sender->setDutyCycle(14, 170);
+    }
+
+    /**
+     * @expectedException \Volantus\Pigpio\PWM\CommandFailedException
+     * @expectedExceptionMessage PWM command failed with status code -99
+     */
+    public function test_setDutyCycle_unknown_failure()
+    {
+        $this->client->expects(self::once())
+            ->method('sendRaw')
+            ->with(self::equalTo(new DefaultRequest(Commands::PWM, 14, 1700)))
+            ->willReturn(new Response(-99));
+
+        $this->sender->setDutyCycle(14, 1700);
     }
 }

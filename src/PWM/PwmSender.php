@@ -12,6 +12,10 @@ use Volantus\Pigpio\Protocol\DefaultRequest;
  */
 class PwmSender
 {
+    const PI_BAD_USER_GPIO = -2;
+    const PI_BAD_DUTYCYCLE = -8;
+    const PI_NOT_PERMITTED = -41;
+
     /**
      * @var Client
      */
@@ -42,6 +46,34 @@ class PwmSender
 
         if (!$response->isSuccessful()) {
             throw new CommandFailedException('SERVO command failed with status code ' . $response->getResponse());
+        }
+    }
+
+    /**
+     * Sets the duty cycle of the PWM signal
+     *
+     * @param int $gpioPin    GPIO pin (0-31)
+     * @param int $dutyCycle  0 - range (default 255), while 0 is stopping the PWM signal
+     *                        s. getRange() and setRange() methods
+     *
+     * @throws CommandFailedException
+     */
+    public function setDutyCycle(int $gpioPin, int $dutyCycle)
+    {
+        $request = new DefaultRequest(Commands::PWM, $gpioPin, $dutyCycle);
+        $response = $this->client->sendRaw($request);
+
+        if (!$response->isSuccessful()) {
+            switch ($response->getResponse()) {
+                case self::PI_BAD_USER_GPIO:
+                    throw new CommandFailedException('PWM command failed => bad GPIO pin given (status code ' . $response->getResponse() . ')');
+                case self::PI_BAD_DUTYCYCLE:
+                    throw new CommandFailedException('PWM command failed => given dutycycle is out of valid range (status code ' . $response->getResponse() . ')');
+                case self::PI_NOT_PERMITTED:
+                    throw new CommandFailedException('PWM command failed => operation was not permitted (status code ' . $response->getResponse() . ')');
+                default:
+                    throw new CommandFailedException('PWM command failed with status code ' . $response->getResponse());
+            }
         }
     }
 }
