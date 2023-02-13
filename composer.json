@@ -1,5 +1,5 @@
 {
-    "name": "volantus/php-pigpio",
+    "name": "haythamfpco/php-pigpio",
     "description": "PHP client for the pigpio daemon library",
     "type": "library",
     "license": "GPL-3.0-only",
